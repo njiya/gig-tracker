@@ -378,8 +378,8 @@ textarea{resize:vertical;min-height:3.5rem}
   <div class="board" id="board"></div>
 </div>
 
-<!-- Docked FAB -->
-<button class="docked-fab" id="addFab"><i class="fa-solid fa-bolt"></i> New Gig</button>
+<!-- Docked FAB (inside app, only shows when logged in) -->
+<button class="docked-fab" id="addFab" style="display:none"><i class="fa-solid fa-bolt"></i> New Gig</button>
 
 <!-- Toast -->
 <div class="toast-dock" id="toast">
@@ -463,8 +463,8 @@ const SEED=[
 let jobs=[],query='',openMenu=null;
 
 /* ================= CONFIG — paste your Supabase values here ================= */
-const SUPABASE_URL  = "https://ifbpofscuslidfkqildb.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmYnBvZnNjdXNsaWRma3FpbGRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzOTk3NTQsImV4cCI6MjEwMDk3NTc1NH0.pAT6tpRs6NDMCpQhF4OLq0UeKyXcZqUS8uaYzW4KC_Q";
+const SUPABASE_URL  = "https://YOUR-PROJECT-REF.supabase.co";
+const SUPABASE_ANON = "YOUR-PUBLIC-ANON-KEY";
 /* ============================================================================ */
 const HAS_CONFIG = !/YOUR-PROJECT-REF/.test(SUPABASE_URL) && !/YOUR-PUBLIC-ANON/.test(SUPABASE_ANON);
 let sb=null, user=null;
@@ -749,9 +749,11 @@ document.getElementById('resetBtn').onclick=()=>{
     jobs=SEED.slice();save();render()}};
 
 /* ---- auth + boot ---- */
-function showScreen(id){['authScreen','configScreen','app'].forEach(s=>{
-  const el=document.getElementById(s);if(el)el.style.display=s===id?'':'none'})}
-function authErr(msg){
+function showScreen(id){
+  ['authScreen','configScreen','app'].forEach(s=>{
+    const el=document.getElementById(s);if(el)el.style.display=s===id?'':'none'});
+  const fab=document.getElementById('addFab');if(fab)fab.style.display=id==='app'?'':'none';
+}function authErr(msg){
   const el=document.getElementById('au-err');if(!el)return;
   el.textContent=msg||'';el.classList.toggle('show',!!msg)}
 
