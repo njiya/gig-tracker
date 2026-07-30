@@ -58,11 +58,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .page-wrap{max-width:1280px;margin:0 auto;padding:1.5rem 1.25rem 6rem}
 
 /* Header */
-.page-header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:1rem 1.5rem;
-  margin-bottom:1.25rem}
-.page-header h1{font-size:1.5rem;font-weight:700;color:var(--primary-accent);
-  letter-spacing:-.02em;line-height:1.1}
-.page-header p{color:var(--slate-700);font-size:.85rem;max-width:54ch}
+.page-header{position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#0d4580 0%,#04A5E6 100%);
+  padding:1.25rem 1.5rem 2.5rem;margin:0 0 1.25rem;
+  border:var(--border-width) solid var(--border-light)}
+.page-header h1{font-size:1.35rem;font-weight:700;color:#fff;
+  letter-spacing:-.02em;line-height:1.1;display:flex;align-items:center;gap:.5rem}
+.page-header h1 i{font-size:1.4rem;opacity:.9}
+.page-header p{color:rgba(255,255,255,.8);font-size:.82rem;margin:.25rem 0 0}
+.page-header svg.wave{position:absolute;bottom:0;left:0;width:100%;height:40px}
 
 /* Tally stats — unified grid */
 .tally-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--border-width);
@@ -120,7 +124,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .dl-name{font-size:.825rem;font-weight:500;color:var(--text-dark);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
 .dl-date{font-size:.7rem;color:var(--slate-700)}
-.dl-empty{font-size:.8rem;color:var(--gray-400);padding:.375rem 0;
+.dl-empty{font-size:.8rem;color:var(--border-light);padding:.375rem 0;
   display:flex;align-items:center;gap:.4rem}
 
 /* ======== 5. BOARD (4 columns) ======== */
@@ -306,6 +310,21 @@ textarea{resize:vertical;min-height:3.5rem}
 .gate-actions{display:flex;gap:.625rem}
 .gate-actions .btn{flex:1}
 .gate-hint{font-size:.72rem;color:var(--slate-700);margin-top:1rem;line-height:1.5}
+/* ======== 13. BRANDED HEADER ======== */
+.site-header{background:var(--water-care-medium);color:#fff;position:relative;overflow:hidden;
+  margin-bottom:0}
+.site-header .hdr-content{position:relative;z-index:2;display:flex;align-items:center;
+  gap:1rem;padding:1.35rem 1.5rem 2.25rem}
+.site-header h1{font-size:1.35rem;font-weight:700;margin:0;letter-spacing:-.02em;color:#fff}
+.site-header h1 i{font-size:1.1rem;margin-right:.25rem}
+.site-header p{font-size:.82rem;margin:.2rem 0 0;color:rgba(255,255,255,.8)}
+.hdr-deco{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.hdr-deco .circles{position:absolute;right:-40px;top:-30px;width:200px;height:200px;
+  border:2px solid rgba(255,255,255,.08)}
+.hdr-deco .circles2{position:absolute;right:-20px;top:-10px;width:160px;height:160px;
+  border:2px solid rgba(255,255,255,.06)}
+.hdr-deco .dots{position:absolute;left:50%;top:8px;opacity:.12}
+.hdr-wave{display:block;width:100%;height:auto;position:absolute;bottom:-1px;left:0;z-index:2}
 </style>
 </head>
 <body>
@@ -329,10 +348,12 @@ textarea{resize:vertical;min-height:3.5rem}
 
 <div class="page-wrap" id="app" style="display:none">
   <div class="page-header">
-    <div>
-      <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
-      <p>Track every side gig from discovery to payday — cards auto-sort by status across four columns.</p>
-    </div>
+    <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
+    <p>Track every side gig from discovery to payday — cards auto-sort by status across four columns.</p>
+    <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
+      <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
+      <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
+    </svg>
   </div>
 
   <div class="tally-grid" id="tally"></div>
