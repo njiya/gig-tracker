@@ -6,6 +6,7 @@
 <title>Side Gig Tracker</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* ======== 1. CORE TOKENS ======== */
 :root {
@@ -284,11 +285,72 @@ textarea{resize:vertical;min-height:3.5rem}
 @media(max-width:1080px){.board{grid-template-columns:repeat(2,1fr)}.tally-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.board{grid-template-columns:1fr}.row2{grid-template-columns:1fr}
   .tally-grid{grid-template-columns:repeat(2,1fr)}}
+/* ======== 12. AUTH SCREEN ======== */
+.auth-screen{position:fixed;inset:0;background:var(--gray-100);display:flex;align-items:center;
+  justify-content:center;padding:1.25rem;z-index:1100}
+.auth-card{background:var(--putih-coway);border:var(--border-width) solid var(--border-light);
+  width:100%;max-width:400px;
+  background-image:
+    linear-gradient(var(--border-light),var(--border-light)),linear-gradient(var(--border-light),var(--border-light)),
+    linear-gradient(var(--border-light),var(--border-light)),linear-gradient(var(--border-light),var(--border-light));
+  background-size:
+    calc(100% - var(--micro-gap)*2) var(--border-width),calc(100% - var(--micro-gap)*2) var(--border-width),
+    var(--border-width) calc(100% - var(--micro-gap)*2),var(--border-width) calc(100% - var(--micro-gap)*2);
+  background-position:center top,center bottom,left center,right center;
+  background-repeat:no-repeat}
+.auth-header{padding:1.5rem 1.5rem 0;border-bottom:none}
+.auth-header h1{font-size:1.35rem;font-weight:700;color:var(--primary-accent);
+  letter-spacing:-.02em;margin:0 0 .25rem;display:flex;align-items:center;gap:.5rem}
+.auth-sub{font-size:.85rem;color:var(--slate-700);margin:0}
+.auth-body{padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:.875rem}
+.auth-err{font-size:.78rem;color:var(--error-red);min-height:1.1rem;padding:.25rem .5rem;
+  background:var(--error-light);border:var(--border-width) solid var(--error-red);display:none}
+.auth-err.show{display:block}
+.auth-actions{display:flex;gap:.625rem;padding:0 1.5rem 1.5rem}
+.auth-actions .btn{flex:1}
+.auth-hint{font-size:.72rem;color:var(--slate-700);padding:0 1.5rem 1.25rem;line-height:1.5}
+.user-bar{display:flex;align-items:center;gap:.5rem;font-size:.75rem;color:var(--slate-700);
+  margin-left:auto}
+.user-bar .user-email{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
 
-<div class="page-wrap">
+<!-- Auth Screen -->
+<div class="auth-screen" id="authScreen" style="display:none">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
+      <p class="auth-sub">Sign in to sync your gigs across every device.</p>
+    </div>
+    <div class="auth-body">
+      <div class="form-group"><label><i class="fa-solid fa-envelope"></i> Email</label>
+        <input type="email" id="au-email" autocomplete="username" placeholder="you@email.com"></div>
+      <div class="form-group"><label><i class="fa-solid fa-lock"></i> Password</label>
+        <input type="password" id="au-pass" autocomplete="current-password" placeholder="••••••••"></div>
+      <div class="auth-err" id="au-err"></div>
+    </div>
+    <div class="auth-actions">
+      <button class="btn btn-primary" id="au-signin"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+      <button class="btn btn-outline" id="au-signup"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+    </div>
+    <p class="auth-hint">First time? Enter an email and a password (6+ characters), then Create Account. Your gigs are private to your login — no one else can read them.</p>
+  </div>
+</div>
+
+<!-- Config Error Screen -->
+<div class="auth-screen" id="configScreen" style="display:none">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1><i class="fa-solid fa-gear"></i> Setup Needed</h1>
+    </div>
+    <div class="auth-body">
+      <p id="configMsg" style="font-size:.85rem;color:var(--slate-700)">Paste your Supabase URL and anon key into the CONFIG lines near the top of index.html, then re-deploy.</p>
+    </div>
+  </div>
+</div>
+
+<div class="page-wrap" id="app" style="display:none">
   <div class="page-header">
     <div>
       <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
@@ -308,6 +370,9 @@ textarea{resize:vertical;min-height:3.5rem}
     <button class="btn btn-outline" id="importBtn"><i class="fa-solid fa-file-import"></i> Import</button>
     <input type="file" id="importFile" accept="application/json" hidden>
     <button class="btn btn-ghost" id="resetBtn"><i class="fa-solid fa-arrow-rotate-left"></i> Reset</button>
+    <div class="user-bar"><i class="fa-solid fa-user-shield"></i> <span class="user-email" id="userEmail"></span>
+      <button class="btn btn-ghost" id="signoutBtn" style="padding:.4rem .75rem;font-size:.7rem"><i class="fa-solid fa-right-from-bracket"></i> Out</button>
+    </div>
   </div>
 
   <div class="board" id="board"></div>
@@ -397,20 +462,45 @@ const SEED=[
 
 let jobs=[],query='',openMenu=null;
 
-/* ---- storage ---- */
+/* ================= CONFIG — paste your Supabase values here ================= */
+const SUPABASE_URL  = "https://ifbpofscuslidfkqildb.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmYnBvZnNjdXNsaWRma3FpbGRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzOTk3NTQsImV4cCI6MjEwMDk3NTc1NH0.pAT6tpRs6NDMCpQhF4OLq0UeKyXcZqUS8uaYzW4KC_Q";
+/* ============================================================================ */
+const HAS_CONFIG = !/YOUR-PROJECT-REF/.test(SUPABASE_URL) && !/YOUR-PUBLIC-ANON/.test(SUPABASE_ANON);
+let sb=null, user=null;
+const CACHE='sidegig_cloud_cache';
+
+/* ---- storage: Supabase cloud with offline cache ---- */
 const store={
   async get(){
-    if(window.storage&&window.storage.get){try{const r=await window.storage.get(KEY);return r&&r.value?r.value:null}catch(e){}}
-    try{return localStorage.getItem(KEY)}catch(e){return null}
+    const {data,error}=await sb.from('gig_data').select('jobs').eq('user_id',user.id).maybeSingle();
+    if(error) throw error;
+    return data ? data.jobs : null;
   },
-  async set(v){
-    if(window.storage&&window.storage.set){try{await window.storage.set(KEY,v);return}catch(e){}}
-    try{localStorage.setItem(KEY,v)}catch(e){}
+  async set(arr){
+    try{localStorage.setItem(CACHE,JSON.stringify(arr))}catch(e){}
+    const {error}=await sb.from('gig_data')
+      .upsert({user_id:user.id,jobs:arr,updated_at:new Date().toISOString()});
+    if(error) throw error;
   }
 };
-async function load(){const raw=await store.get();if(raw){try{jobs=JSON.parse(raw);return}catch(e){}}
-  jobs=SEED.slice();await save(true)}
-async function save(silent){await store.set(JSON.stringify(jobs));if(!silent) flash('Saved')}
+function migrateLocal(){
+  try{const old=localStorage.getItem('sidegig_jobs_v3');
+    if(old){const a=JSON.parse(old);if(Array.isArray(a)&&a.length)return a}}catch(e){}
+  return SEED.slice();
+}
+async function load(){
+  let data=null;
+  try{data=await store.get()}
+  catch(e){try{const c=localStorage.getItem(CACHE);if(c)data=JSON.parse(c)}catch(_){}
+    if(!Array.isArray(data))console.error(e)}
+  if(Array.isArray(data)){jobs=data}
+  else{jobs=migrateLocal();await save(true)}
+}
+async function save(silent){
+  try{await store.set(jobs);if(!silent)flash('Synced')}
+  catch(e){console.error(e);flash('Offline — saved locally')}
+}
 
 /* ---- toast ---- */
 let flashT;
@@ -658,8 +748,66 @@ document.getElementById('resetBtn').onclick=()=>{
   if(confirm('Reset to the original 21 platforms? Current changes will be lost.')){
     jobs=SEED.slice();save();render()}};
 
-/* ---- boot ---- */
-(async()=>{await load();render()})();
+/* ---- auth + boot ---- */
+function showScreen(id){['authScreen','configScreen','app'].forEach(s=>{
+  const el=document.getElementById(s);if(el)el.style.display=s===id?'':'none'})}
+function authErr(msg){
+  const el=document.getElementById('au-err');if(!el)return;
+  el.textContent=msg||'';el.classList.toggle('show',!!msg)}
+
+let currentUid=null;
+async function onSession(session){
+  const uid=session&&session.user?session.user.id:null;
+  if(uid===currentUid)return;
+  currentUid=uid;
+  if(uid){
+    user=session.user;showScreen('app');
+    const em=document.getElementById('userEmail');if(em)em.textContent=user.email||'';
+    await load();render();
+  } else {user=null;jobs=[];showScreen('authScreen')}
+}
+async function boot(){
+  try{
+    if(!HAS_CONFIG){showScreen('configScreen');return}
+    if(!window.supabase){showScreen('configScreen');
+      document.getElementById('configMsg').textContent=
+        'Could not load the Supabase library — check your internet and refresh.';return}
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+    sb.auth.onAuthStateChange((_e,s)=>onSession(s));
+    const {data:{session}}=await sb.auth.getSession();
+    onSession(session);
+  }catch(err){
+    showScreen('configScreen');
+    document.getElementById('configMsg').textContent=
+      'Error: '+(err&&err.message?err.message:err)+'. Check the Supabase URL and anon key in index.html.';
+  }
+}
+async function doSignIn(){
+  authErr('');
+  const email=(document.getElementById('au-email').value||'').trim();
+  const pass=document.getElementById('au-pass').value||'';
+  if(!email||!pass){authErr('Enter your email and password.');return}
+  const {error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error)authErr(error.message);
+}
+async function doSignUp(){
+  authErr('');
+  const email=(document.getElementById('au-email').value||'').trim();
+  const pass=document.getElementById('au-pass').value||'';
+  if(!email||!pass){authErr('Enter an email and a password (6+ characters).');return}
+  const {data,error}=await sb.auth.signUp({email,password:pass});
+  if(error){authErr(error.message);return}
+  if(!data.session)authErr('Account created! If email confirmation is on, check your inbox then Sign In.');
+}
+
+try{
+  document.getElementById('au-signin').onclick=doSignIn;
+  document.getElementById('au-signup').onclick=doSignUp;
+  document.getElementById('au-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doSignIn()});
+  document.getElementById('signoutBtn').onclick=async()=>{if(sb)await sb.auth.signOut()};
+}catch(e){}
+
+boot();
 </script>
 </body>
 </html>
