@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Side Gig Tracker</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ======== 1. CORE TOKENS ======== */
+:root {
+  --biru-coway: #00a9e0;
+  --putih-coway: #ffffff;
+  --biru-konsistensi: #007BC0;
+  --water-care-dark: #0d4580;
+  --water-care-medium: #0069a8;
+  --air-care-light: #86e0ae;
+  --air-care-pastel: #b5e8cb;
+  --error-red: #D92D20;
+  --error-light: #FEF3F2;
+  --warning-orange: #F79009;
+  --warning-yellow: #FEC84B;
+  --warning-light: #FFFAEB;
+  --success-green: #12B76A;
+  --success-light: #ECFDF3;
+  --success-dark: #027A48;
+  --info-blue: #1570EF;
+  --info-light: #F0F9FF;
+  --primary-accent: #04A5E6;
+  --light-wash-blue: #E6F6FD;
+  --text-dark: #2C3E50;
+  --slate-900: #101828;
+  --slate-700: #344054;
+  --border-light: #C0C0C0;
+  --gray-400: #98A2B3;
+  --gray-100: #F2F4F7;
+  --accent-purple: #7A5AF8;
+  --purple-light: #F4F3FF;
+  --amber-gold: #B54708;
+  --amber-light: #FEF0C7;
+  --teal-accent: #14B8A6;
+  --teal-light: #F0FDFA;
+  --border-width: 1px;
+  --micro-gap: 8px;
+  --transition-speed: 0.25s;
+}
+
+/* ======== 2. NEGATIVE CONSTRAINTS ======== */
+*{box-sizing:border-box;border-radius:0!important;box-shadow:none!important;
+  text-shadow:none!important;outline:none;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#F2F4F7;color:var(--text-dark);
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+
+/* ======== 3. PAGE LAYOUT ======== */
+.page-wrap{max-width:1280px;margin:0 auto;padding:1.5rem 1.25rem 6rem}
+
+/* Header */
+.page-header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:1rem 1.5rem;
+  margin-bottom:1.25rem}
+.page-header h1{font-size:1.5rem;font-weight:700;color:var(--primary-accent);
+  letter-spacing:-.02em;line-height:1.1}
+.page-header p{color:var(--slate-700);font-size:.85rem;max-width:54ch}
+
+/* Tally stats — unified grid */
+.tally-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--border-width);
+  background-color:var(--border-light);border:var(--border-width) solid var(--border-light);
+  margin-bottom:1.25rem}
+.tally-cell{background:var(--putih-coway);padding:.75rem 1rem;display:flex;
+  flex-direction:column;gap:.15rem}
+.tally-cell b{font-size:1.5rem;font-weight:700;line-height:1;letter-spacing:-.02em}
+.tally-cell span{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--slate-700);font-weight:600;display:flex;align-items:center;gap:.3rem}
+.tally-cell span i{font-size:.65rem}
+.tc-avail b{color:var(--info-blue)} .tc-apply b{color:var(--warning-orange)}
+.tc-work b{color:var(--success-green)} .tc-done b{color:var(--teal-accent)}
+
+/* Toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:.625rem;align-items:center;margin-bottom:1.25rem}
+.search-box{position:relative;flex:1 1 220px;min-width:180px}
+.search-box input{width:100%;padding:.625rem 2.25rem .625rem .75rem;
+  border:var(--border-width) solid var(--border-light);background:var(--putih-coway);
+  font-size:.875rem;color:var(--text-dark)}
+.search-box input:focus{border-color:var(--primary-accent);background:var(--light-wash-blue)}
+.search-box i{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+  color:var(--gray-400);font-size:.85rem}
+
+/* Buttons (design system) */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  padding:.625rem 1.25rem;font-weight:600;cursor:pointer;text-transform:uppercase;
+  letter-spacing:.05em;font-size:.8rem;border:var(--border-width) solid transparent;
+  transition:all var(--transition-speed) ease}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--primary-accent);color:var(--putih-coway);border-color:var(--primary-accent)}
+.btn-primary:hover{background:var(--biru-konsistensi);border-color:var(--biru-konsistensi)}
+.btn-outline{background:var(--putih-coway);color:var(--primary-accent);border-color:var(--primary-accent)}
+.btn-outline:hover{background:var(--primary-accent);color:var(--putih-coway)}
+.btn-danger{background:var(--putih-coway);color:var(--error-red);border-color:var(--error-red)}
+.btn-danger:hover{background:var(--error-red);color:var(--putih-coway)}
+.btn-ghost{background:transparent;color:var(--slate-700);border-color:var(--border-light)}
+.btn-ghost:hover{background:var(--gray-100);border-color:var(--slate-700)}
+
+/* ======== 4. DEADLINES STRIP ======== */
+.deadlines-strip{margin-bottom:1.25rem;background:var(--putih-coway);
+  border:var(--border-width) solid var(--border-light);padding:.75rem 1rem}
+.deadlines-strip .strip-head{display:flex;align-items:center;gap:.5rem;font-size:.8rem;
+  font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dark);
+  margin-bottom:.625rem}
+.strip-head .dl-count{background:var(--gray-100);border:var(--border-width) solid var(--border-light);
+  padding:0 .5rem;font-size:.75rem;color:var(--slate-700);font-weight:600}
+.dl-track{display:flex;gap:var(--border-width);overflow-x:auto;background:var(--border-light);
+  border:var(--border-width) solid var(--border-light)}
+.dl-pill{flex:0 0 auto;min-width:150px;max-width:210px;padding:.625rem .75rem;
+  background:var(--putih-coway);cursor:pointer;display:flex;flex-direction:column;gap:.15rem;
+  text-align:left;transition:background var(--transition-speed)}
+.dl-pill:hover{background:var(--light-wash-blue)}
+.dl-when{font-size:.75rem;font-weight:700;text-transform:uppercase}
+.dl-name{font-size:.825rem;font-weight:500;color:var(--text-dark);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.dl-date{font-size:.7rem;color:var(--slate-700)}
+.dl-empty{font-size:.8rem;color:var(--gray-400);padding:.375rem 0;
+  display:flex;align-items:center;gap:.4rem}
+
+/* ======== 5. BOARD (4 columns) ======== */
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;align-items:start}
+.col-head{display:flex;align-items:center;gap:.5rem;padding:.125rem 0 .5rem}
+.col-head h2{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-dark);margin:0;display:flex;align-items:center;gap:.35rem}
+.col-head h2 i{font-size:.7rem}
+.col-head .col-count{margin-left:auto;font-size:.75rem;font-weight:600;color:var(--slate-700);
+  background:var(--gray-100);border:var(--border-width) solid var(--border-light);padding:0 .5rem}
+.col-body{display:flex;flex-direction:column;gap:var(--border-width);
+  background:var(--border-light);border:var(--border-width) solid var(--border-light);
+  min-height:48px}
+.col.c-avail .col-head h2{color:var(--info-blue)}
+.col.c-apply .col-head h2{color:var(--warning-orange)}
+.col.c-work .col-head h2{color:var(--success-green)}
+.col.c-done .col-head h2{color:var(--teal-accent)}
+/* accent strip on top of each col-body */
+.col.c-avail .col-body{border-top:3px solid var(--info-blue)}
+.col.c-apply .col-body{border-top:3px solid var(--warning-orange)}
+.col.c-work .col-body{border-top:3px solid var(--success-green)}
+.col.c-done .col-body{border-top:3px solid var(--teal-accent)}
+
+/* ======== 6. CARD ======== */
+.card{background:var(--putih-coway);padding:.875rem;position:relative}
+.card.closed{opacity:.6}
+.card .top{display:flex;align-items:flex-start;gap:.5rem}
+.card .eyebrow{font-size:.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--gray-400);margin-bottom:.15rem}
+.card .name{font-weight:600;font-size:.925rem;letter-spacing:-.01em;line-height:1.25;
+  color:var(--slate-900)}
+.card .link{display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;
+  color:var(--primary-accent);margin-top:.25rem;word-break:break-all}
+.card .link:hover{text-decoration:underline}
+.card .link i{font-size:.6rem}
+.kebab{margin-left:auto;flex:0 0 auto;width:26px;height:26px;display:flex;
+  align-items:center;justify-content:center;color:var(--gray-400);
+  border:var(--border-width) solid transparent}
+.kebab:hover{background:var(--gray-100);border-color:var(--border-light);color:var(--text-dark)}
+
+/* Badges / chips */
+.chips{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.5rem}
+.badge{display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .5rem;
+  font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+  border:var(--border-width) solid transparent}
+.badge-status{background:var(--light-wash-blue);color:var(--primary-accent);
+  border-color:var(--primary-accent)}
+.badge-pay{background:var(--success-light);color:var(--success-dark);
+  border-color:var(--success-green)}
+.badge-method{background:var(--gray-100);color:var(--slate-700);border-color:var(--border-light)}
+.badge-dl{border-color:var(--border-light)}
+
+/* Attachments */
+.attach{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.5rem}
+.attach a{display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;font-weight:500;
+  background:var(--info-light);color:var(--info-blue);padding:.2rem .5rem;
+  border:var(--border-width) solid var(--info-blue)}
+.attach a:hover{background:var(--primary-accent);color:var(--putih-coway)}
+
+/* Notes */
+.card .notes{font-size:.78rem;color:var(--slate-700);margin-top:.5rem;
+  white-space:pre-wrap;border-top:var(--border-width) dashed var(--border-light);
+  padding-top:.5rem}
+
+/* Move buttons */
+.moves{display:flex;gap:.375rem;margin-top:.625rem}
+.move{flex:1;padding:.4rem .3rem;font-size:.7rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;
+  justify-content:center;gap:.3rem;border:var(--border-width) solid var(--border-light);
+  background:var(--putih-coway);color:var(--text-dark);transition:all var(--transition-speed)}
+.move:hover{background:var(--gray-100);border-color:var(--text-dark)}
+.move.fwd{background:var(--primary-accent);border-color:var(--primary-accent);color:var(--putih-coway)}
+.move.fwd:hover{background:var(--biru-konsistensi);border-color:var(--biru-konsistensi)}
+.move i{font-size:.6rem}
+.empty{text-align:center;color:var(--gray-400);font-size:.78rem;padding:1.25rem .625rem;
+  border:var(--border-width) dashed var(--border-light);background:var(--putih-coway)}
+
+/* ======== 7. CONTEXT MENU ======== */
+.ctx-menu{position:absolute;top:2.25rem;right:.625rem;background:var(--putih-coway);
+  border:var(--border-width) solid var(--text-dark);z-index:20;min-width:130px}
+.ctx-menu button{display:flex;width:100%;align-items:center;gap:.5rem;padding:.5rem .75rem;
+  font-size:.8rem;color:var(--text-dark);text-align:left;
+  border-bottom:var(--border-width) solid var(--gray-100)}
+.ctx-menu button:last-child{border-bottom:none}
+.ctx-menu button:hover{background:var(--light-wash-blue)}
+.ctx-menu button.del{color:var(--error-red)}
+
+/* ======== 8. MODAL ======== */
+.modal-overlay{position:fixed;inset:0;background:rgba(44,62,80,.9);display:flex;
+  align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;
+  transition:opacity var(--transition-speed) linear;padding:1rem}
+.modal-overlay.active{opacity:1;pointer-events:auto}
+.modal-container{width:100%;max-width:500px;background:var(--putih-coway);
+  border:var(--border-width) solid var(--border-light);position:relative;
+  /* disconnected container borders */
+  background-image:
+    linear-gradient(var(--border-light),var(--border-light)),linear-gradient(var(--border-light),var(--border-light)),
+    linear-gradient(var(--border-light),var(--border-light)),linear-gradient(var(--border-light),var(--border-light));
+  background-size:
+    calc(100% - var(--micro-gap)*2) var(--border-width),calc(100% - var(--micro-gap)*2) var(--border-width),
+    var(--border-width) calc(100% - var(--micro-gap)*2),var(--border-width) calc(100% - var(--micro-gap)*2);
+  background-position:center top,center bottom,left center,right center;
+  background-repeat:no-repeat}
+.modal-header{display:flex;justify-content:space-between;align-items:center;
+  border-bottom:var(--border-width) solid var(--border-light);padding:1rem 1.25rem}
+.modal-header h3{font-size:1.05rem;font-weight:700;color:var(--primary-accent);margin:0}
+.modal-header button{font-size:1rem;color:var(--gray-400);padding:.25rem}
+.modal-header button:hover{color:var(--text-dark)}
+.modal-body{padding:1rem 1.25rem;max-height:72vh;overflow-y:auto;display:flex;
+  flex-direction:column;gap:.875rem}
+.modal-footer{display:flex;justify-content:flex-end;gap:.625rem;
+  border-top:var(--border-width) solid var(--border-light);padding:1rem 1.25rem}
+
+/* Form groups (design system) */
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--text-dark);margin-bottom:.35rem;font-weight:600;display:flex;
+  align-items:center;gap:.3rem}
+.form-group label i{font-size:.7rem;color:var(--primary-accent);margin-right:.2rem}
+.badge i{font-size:.6rem}
+.form-group label .opt{font-weight:400;text-transform:none;letter-spacing:0;color:var(--gray-400);
+  font-size:.72rem;margin-left:.15rem}
+.form-group .form-hint{font-size:.72rem;color:var(--slate-700);margin-top:.25rem}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+input[type="text"],input[type="email"],input[type="password"],input[type="url"],
+input[type="datetime-local"],select,textarea{
+  width:100%;padding:.625rem .75rem;background:var(--putih-coway);
+  border:var(--border-width) solid var(--border-light);color:var(--text-dark);
+  font-family:'Inter',sans-serif;font-size:.875rem;
+  transition:border-color var(--transition-speed),background var(--transition-speed)}
+input:focus,select:focus,textarea:focus{border-color:var(--primary-accent);
+  background:var(--light-wash-blue)}
+select{-webkit-appearance:none;-moz-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2304A5E6' stroke-width='2.5' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .75rem center;background-size:1rem;
+  padding-right:2.5rem!important;cursor:pointer}
+textarea{resize:vertical;min-height:3.5rem}
+
+/* ======== 9. DOCKED FAB ======== */
+.docked-fab{position:fixed;right:0;bottom:5rem;background:var(--primary-accent);
+  color:var(--putih-coway);border:2px solid var(--text-dark);border-right:none;
+  padding:.75rem 1.25rem;display:flex;align-items:center;gap:.5rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;font-size:.8rem;cursor:pointer;
+  z-index:900;transition:all var(--transition-speed)}
+.docked-fab:hover{background:var(--text-dark);color:var(--primary-accent);
+  transform:translateX(-5px)}
+
+/* ======== 10. TOAST ======== */
+.toast-dock{position:fixed;bottom:0;right:0;display:flex;flex-direction:column;z-index:999;
+  border-left:var(--border-width) solid var(--border-light);
+  border-top:var(--border-width) solid var(--border-light);
+  background:var(--putih-coway);transform:translateY(100%);transition:transform .3s;
+  max-width:320px}
+.toast-dock.show{transform:translateY(0)}
+.toast-panel{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem}
+.toast-panel i{font-size:1rem;color:var(--success-green)}
+.toast-text{flex:1;font-size:.8rem;font-weight:500}
+.toast-close{cursor:pointer;color:var(--border-light);font-size:.85rem;padding:.25rem}
+.toast-close:hover{color:var(--text-dark)}
+
+/* ======== 11. RESPONSIVE ======== */
+@media(max-width:1080px){.board{grid-template-columns:repeat(2,1fr)}.tally-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.board{grid-template-columns:1fr}.row2{grid-template-columns:1fr}
+  .tally-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
+      <p>Track every side gig from discovery to payday — cards auto-sort by status across four columns.</p>
+    </div>
+  </div>
+
+  <div class="tally-grid" id="tally"></div>
+  <div class="deadlines-strip" id="deadlines"></div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="search" placeholder="Search platform, job, status, notes…" type="text" autocomplete="off">
+    </div>
+    <button class="btn btn-outline" id="exportBtn"><i class="fa-solid fa-file-export"></i> Export</button>
+    <button class="btn btn-outline" id="importBtn"><i class="fa-solid fa-file-import"></i> Import</button>
+    <input type="file" id="importFile" accept="application/json" hidden>
+    <button class="btn btn-ghost" id="resetBtn"><i class="fa-solid fa-arrow-rotate-left"></i> Reset</button>
+  </div>
+
+  <div class="board" id="board"></div>
+</div>
+
+<!-- Docked FAB -->
+<button class="docked-fab" id="addFab"><i class="fa-solid fa-bolt"></i> New Gig</button>
+
+<!-- Toast -->
+<div class="toast-dock" id="toast">
+  <div class="toast-panel">
+    <i class="fa-solid fa-circle-check"></i>
+    <span class="toast-text" id="toastMsg">Saved</span>
+    <i class="fa-solid fa-xmark toast-close" id="toastClose"></i>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 id="modalTitle">Add Gig</h3>
+      <button id="modalClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="m-cancel">Cancel</button>
+      <button class="btn btn-primary" id="m-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY='sidegig_jobs_v3';
+const SECTIONS=[
+  {id:'available',label:'Available',cls:'c-avail'},
+  {id:'applied',label:'Applied',cls:'c-apply'},
+  {id:'working',label:'Working On',cls:'c-work'},
+  {id:'done',label:'Done / Paid',cls:'c-done'},
+];
+const STATUS_OPTIONS=['','applied','verified','assessment','accepted','declined','on progress','finished','paid'];
+const STATUS_GROUP={
+  '':'available',
+  'applied':'applied','verified':'applied','assessment':'applied','declined':'applied',
+  'accepted':'working','on progress':'working','finished':'done','paid':'done'
+};
+const CLOSED=new Set(['declined']);
+const STATUS_STYLE={
+  'applied':     ['var(--info-light)','var(--info-blue)','var(--info-blue)'],
+  'verified':    ['var(--teal-light)','var(--teal-accent)','var(--teal-accent)'],
+  'assessment':  ['var(--purple-light)','var(--accent-purple)','var(--accent-purple)'],
+  'accepted':    ['var(--success-light)','var(--success-dark)','var(--success-green)'],
+  'on progress': ['var(--warning-light)','var(--amber-gold)','var(--warning-orange)'],
+  'declined':    ['var(--error-light)','var(--error-red)','var(--error-red)'],
+  'finished':    ['var(--gray-100)','var(--slate-700)','var(--border-light)'],
+  'paid':        ['var(--success-light)','var(--success-dark)','var(--success-green)'],
+};
+const PAYMENT_SUGGEST=['PayPal','Payoneer','Wise','Bank transfer','Direct deposit','Crypto','Gift card','Cheque'];
+const SEED=[
+  ['Outlier AI','https://outlier.ai/','Verification'],
+  ['AttaPoll','',''],['ViewPoints by Meta','',''],
+  ['OneForma','https://www.oneforma.com/jobs/page/2/','Profile Setup'],
+  ['TELUS Digital AI','https://www.telusinternational.ai/','Profile Setup'],
+  ['Tee Public','https://www.teepublic.com/',''],
+  ['Mercor','','Assessment'],['ATLAS Capture','','Verification'],
+  ['Meridial AI','','Verification'],
+  ['OpenTrain AI','https://www.opentrain.ai/jobs/','Profile Setup'],
+  ['Voices','https://www.voices.com/',''],
+  ['SME Career','https://sme.careers/','Profile Setup'],
+  ['Wellfound','https://wellfound.com/','Profile Setup'],
+  ['RWS','https://jobs.lever.co/rws',''],
+  ['Turing','','Profile Setup'],
+  ['Alignerr','https://www.alignerr.com/','Profile Setup'],
+  ['Perle','https://www.perle.xyz/','Sign Up'],
+  ['AfterQuery','https://experts.afterquery.com/apply','Verification'],
+  ['KLED','',''],
+  ['Ceipal','https://candidateportal.ceipal.com/career-jobs',''],
+  ['BabelAudio','https://dashboard.babel.audio/jobs','Verification'],
+].map((r,i)=>{
+  // give a couple of seeds sample deadlines so the strip is visible on first load
+  let dl='';
+  if(i===0) { const d=new Date(); d.setDate(d.getDate()+3); dl=d.toISOString().slice(0,16); } // Outlier AI: 3 days
+  if(i===3) { const d=new Date(); d.setDate(d.getDate()+7); dl=d.toISOString().slice(0,16); } // OneForma: 7 days
+  return {id:'seed_'+i,platform:r[0],job:'',url:r[1],pay:'',payment:'',
+    status:'',notes:r[2]?('Onboarding: '+r[2]):'',attachments:[],deadline:dl,added:Date.now()};
+});
+
+let jobs=[],query='',openMenu=null;
+
+/* ---- storage ---- */
+const store={
+  async get(){
+    if(window.storage&&window.storage.get){try{const r=await window.storage.get(KEY);return r&&r.value?r.value:null}catch(e){}}
+    try{return localStorage.getItem(KEY)}catch(e){return null}
+  },
+  async set(v){
+    if(window.storage&&window.storage.set){try{await window.storage.set(KEY,v);return}catch(e){}}
+    try{localStorage.setItem(KEY,v)}catch(e){}
+  }
+};
+async function load(){const raw=await store.get();if(raw){try{jobs=JSON.parse(raw);return}catch(e){}}
+  jobs=SEED.slice();await save(true)}
+async function save(silent){await store.set(JSON.stringify(jobs));if(!silent) flash('Saved')}
+
+/* ---- toast ---- */
+let flashT;
+function flash(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');clearTimeout(flashT);flashT=setTimeout(()=>t.classList.remove('show'),2000);
+}
+document.getElementById('toastClose').onclick=()=>document.getElementById('toast').classList.remove('show');
+
+/* ---- helpers ---- */
+const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tidyUrl=u=>!u?'':(/^https?:\/\//i.test(u)?u:'https://'+u);
+function hostOf(u){try{return new URL(tidyUrl(u)).host.replace(/^www\./,'')}catch(e){return u}}
+function fileLabel(u){try{const p=new URL(tidyUrl(u)).pathname.split('/').filter(Boolean).pop();
+  return decodeURIComponent(p||hostOf(u))}catch(e){return u}}
+const sectionOf=j=>STATUS_GROUP[j.status]||'available';
+
+function urgColor(u){
+  return u==='overdue'?['var(--error-light)','var(--error-red)']
+       : u==='soon'?['var(--warning-light)','var(--warning-orange)']
+       : ['var(--info-light)','var(--info-blue)'];
+}
+function fmtDeadline(iso){
+  const d=new Date(iso);
+  return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function deadlineInfo(iso){
+  if(!iso) return null;const d=new Date(iso);if(isNaN(d)) return null;
+  const ms=d-new Date(),hrs=ms/36e5;let urg='later',rel='';
+  if(ms<0){urg='overdue';const od=Math.floor(-hrs/24);rel=od>=1?`overdue ${od}d`:'overdue'}
+  else if(hrs<48){urg='soon';rel=hrs<1?'in <1h':hrs<24?`in ${Math.round(hrs)}h`:'tomorrow'}
+  else{urg='later';rel=`in ${Math.floor(hrs/24)}d`}
+  return{date:d,label:fmtDeadline(iso),rel,urg};
+}
+function matches(j){if(!query)return true;const q=query.toLowerCase();
+  return[j.platform,j.job,j.status,j.notes,j.pay,j.payment,j.url,(j.attachments||[]).join(' ')]
+    .some(v=>(v||'').toLowerCase().includes(q))}
+
+/* ---- render ---- */
+function render(){
+  renderDeadlines();
+  const c=s=>jobs.filter(j=>sectionOf(j)===s).length;
+  document.getElementById('tally').innerHTML=
+    `<div class="tally-cell tc-avail"><b>${c('available')}</b><span><i class="fa-solid fa-layer-group"></i> Available</span></div>
+     <div class="tally-cell tc-apply"><b>${c('applied')}</b><span><i class="fa-solid fa-paper-plane"></i> Applied</span></div>
+     <div class="tally-cell tc-work"><b>${c('working')}</b><span><i class="fa-solid fa-microchip"></i> Working</span></div>
+     <div class="tally-cell tc-done"><b>${c('done')}</b><span><i class="fa-solid fa-trophy"></i> Done</span></div>`;
+  const board=document.getElementById('board');board.innerHTML='';
+  SECTIONS.forEach(sec=>{
+    const list=jobs.filter(j=>sectionOf(j)===sec.id&&matches(j));
+    const ico={available:'fa-layer-group',applied:'fa-paper-plane',working:'fa-microchip',done:'fa-trophy'}[sec.id];
+    const col=document.createElement('div');col.className='col '+sec.cls;
+    col.innerHTML=`<div class="col-head"><h2><i class="fa-solid ${ico}"></i> ${sec.label}</h2>
+      <span class="col-count">${list.length}</span></div><div class="col-body"></div>`;
+    board.appendChild(col);
+    const body=col.querySelector('.col-body');
+    if(!list.length){body.innerHTML=`<div class="empty">${query?'No matches.':'Nothing here yet.'}</div>`;return}
+    list.forEach(j=>body.appendChild(cardEl(j)));
+  });
+}
+
+function renderDeadlines(){
+  const el=document.getElementById('deadlines');
+  const items=jobs.filter(j=>j.deadline&&!['finished','paid','declined'].includes(j.status))
+    .map(j=>({j,info:deadlineInfo(j.deadline)})).filter(x=>x.info).sort((a,b)=>a.info.date-b.info.date);
+  if(!items.length){
+    el.innerHTML=`<div class="strip-head"><i class="fa-solid fa-hourglass-half"></i> Upcoming Deadlines
+      <span class="dl-count">0</span></div>
+      <div class="dl-empty"><i class="fa-solid fa-calendar-days"></i> No upcoming deadlines — edit a gig and set a deadline date to see it here.</div>`;
+    return;
+  }
+  el.innerHTML=`<div class="strip-head"><i class="fa-solid fa-hourglass-half"></i> Upcoming Deadlines
+      <span class="dl-count">${items.length}</span></div>
+    <div class="dl-track">${items.map(x=>{
+      const t=x.j.job||x.j.platform;const [,fg]=urgColor(x.info.urg);
+      return `<button class="dl-pill" data-open="${x.j.id}">
+        <span class="dl-when" style="color:${fg}">${esc(x.info.rel)}</span>
+        <span class="dl-name">${esc(t)}</span>
+        <span class="dl-date">${esc(x.info.label)}</span></button>`;
+    }).join('')}</div>`;
+}
+
+const STATUS_ICON={
+  'applied':'fa-paper-plane','verified':'fa-shield-halved','assessment':'fa-flask-vial',
+  'accepted':'fa-handshake','on progress':'fa-spinner','declined':'fa-circle-xmark',
+  'finished':'fa-flag-checkered','paid':'fa-wallet'
+};
+function statusBadge(s){
+  if(!s)return'';const st=STATUS_STYLE[s];if(!st)return'';
+  const ico=STATUS_ICON[s]||'';
+  return `<span class="badge" style="background:${st[0]};color:${st[1]};border-color:${st[2]}">${ico?`<i class="fa-solid ${ico}"></i> `:''}${esc(s)}</span>`;
+}
+
+function cardEl(j){
+  const el=document.createElement('div');el.className='card'+(CLOSED.has(j.status)?' closed':'');
+  const url=tidyUrl(j.url);const title=j.job||j.platform;
+  const eyebrow=(j.job&&j.platform)?`<div class="eyebrow">${esc(j.platform)}</div>`:'';
+  const linkHtml=url?`<a class="link" href="${esc(url)}" target="_blank" rel="noopener">
+      <i class="fa-solid fa-up-right-from-square"></i> ${esc(hostOf(j.url))}</a>`:'';
+  const dl=deadlineInfo(j.deadline);
+  const dlBadge=dl?(([bg,fg])=>`<span class="badge badge-dl" style="background:${bg};color:${fg};border-color:${fg}">
+      <i class="fa-solid fa-clock"></i> ${esc(dl.label)} · ${esc(dl.rel)}</span>`)(urgColor(dl.urg)):'';
+  const chips=[statusBadge(j.status),dlBadge,
+    j.pay?`<span class="badge badge-pay"><i class="fa-solid fa-coins"></i> ${esc(j.pay)}</span>`:'',
+    j.payment?`<span class="badge badge-method"><i class="fa-solid fa-credit-card"></i> ${esc(j.payment)}</span>`:''].filter(Boolean).join('');
+  const atts=(j.attachments||[]).filter(Boolean);
+  const attHtml=atts.length?`<div class="attach">${atts.map(a=>`
+      <a href="${esc(tidyUrl(a))}" target="_blank" rel="noopener" title="${esc(a)}">
+        <i class="fa-solid fa-file-arrow-up"></i> ${esc(fileLabel(a))}</a>`).join('')}</div>`:'';
+  el.innerHTML=`
+    <div class="top"><div>${eyebrow}<div class="name">${esc(title)}</div>${linkHtml}</div>
+      <button class="kebab" data-menu="${j.id}" aria-label="Options">
+        <i class="fa-solid fa-ellipsis-vertical"></i></button></div>
+    ${chips?`<div class="chips">${chips}</div>`:''}
+    ${attHtml}
+    ${j.notes?`<div class="notes">${esc(j.notes)}</div>`:''}
+    <div class="moves">${movesFor(j)}</div>`;
+  return el;
+}
+function movesFor(j){
+  const sec=sectionOf(j);
+  const back=to=>`<button class="move" data-move="${j.id}" data-to="${to}">
+     <i class="fa-solid fa-chevron-left"></i></button>`;
+  const fwd=(to,txt)=>`<button class="move fwd" data-move="${j.id}" data-to="${to}">
+     ${txt} <i class="fa-solid fa-chevron-right"></i></button>`;
+  if(sec==='available') return fwd('applied','<i class="fa-solid fa-paper-plane"></i> Apply');
+  if(sec==='applied')   return back('')+fwd('accepted','<i class="fa-solid fa-rocket"></i> Start');
+  if(sec==='working')   return back('applied')+fwd('finished','<i class="fa-solid fa-flag-checkered"></i> Done');
+  return back('accepted');
+}
+
+/* ---- interactions ---- */
+document.getElementById('board').addEventListener('click',e=>{
+  const mv=e.target.closest('[data-move]');if(mv){setStatus(mv.dataset.move,mv.dataset.to);return}
+  const kb=e.target.closest('[data-menu]');if(kb){toggleMenu(kb,kb.dataset.menu);return}
+});
+document.getElementById('deadlines').addEventListener('click',e=>{
+  const p=e.target.closest('[data-open]');if(p)openModal(p.dataset.open);
+});
+document.addEventListener('click',e=>{
+  if(openMenu&&!e.target.closest('.ctx-menu')&&!e.target.closest('[data-menu]')){openMenu.remove();openMenu=null}
+});
+function setStatus(id,status){const j=jobs.find(x=>x.id===id);if(!j)return;j.status=status;save();render()}
+function toggleMenu(anchor,id){
+  if(openMenu){openMenu.remove();openMenu=null}
+  const card=anchor.closest('.card');const m=document.createElement('div');m.className='ctx-menu';
+  m.innerHTML=`<button data-act="edit"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+    <button class="del" data-act="del"><i class="fa-solid fa-trash-can"></i> Delete</button>`;
+  card.appendChild(m);openMenu=m;
+  m.addEventListener('click',ev=>{
+    const b=ev.target.closest('button');if(!b)return;
+    if(b.dataset.act==='edit')openModal(id);
+    if(b.dataset.act==='del'){if(confirm('Delete this gig?')){jobs=jobs.filter(x=>x.id!==id);save();render()}}
+    if(openMenu){openMenu.remove();openMenu=null}
+  });
+}
+
+/* ---- modal ---- */
+function openModal(id){
+  const editing=jobs.find(x=>x.id===id);
+  const j=editing||{platform:'',job:'',url:'',pay:'',payment:'',status:'',notes:'',attachments:[],deadline:''};
+  document.getElementById('modalTitle').textContent=editing?'Edit Gig':'Add Gig';
+  const statusOpts=STATUS_OPTIONS.map(s=>`<option value="${esc(s)}" ${s===j.status?'selected':''}>${s||'— none (Available) —'}</option>`).join('');
+  const payList=PAYMENT_SUGGEST.map(p=>`<option value="${esc(p)}">`).join('');
+  const body=document.getElementById('modalBody');
+  body.innerHTML=`
+    <div class="form-group"><label><i class="fa-solid fa-building"></i> Platform Name</label>
+      <input type="text" id="f-platform" value="${esc(j.platform)}" placeholder="e.g. Outlier AI"></div>
+    <div class="form-group"><label><i class="fa-solid fa-briefcase"></i> Job Name <span class="opt">(optional)</span></label>
+      <input type="text" id="f-job" value="${esc(j.job)}" placeholder="e.g. AI Data Specialist – Indonesian"></div>
+    <div class="form-group"><label><i class="fa-solid fa-link"></i> Link <span class="opt">(optional)</span></label>
+      <input type="url" id="f-url" value="${esc(j.url)}" placeholder="https://…"></div>
+    <div class="row2">
+      <div class="form-group"><label><i class="fa-solid fa-coins"></i> Pay / Rate <span class="opt">(opt.)</span></label>
+        <input type="text" id="f-pay" value="${esc(j.pay)}" placeholder="e.g. $18/hr"></div>
+      <div class="form-group"><label><i class="fa-solid fa-credit-card"></i> Payment Method <span class="opt">(opt.)</span></label>
+        <input type="text" id="f-payment" list="pay-methods" value="${esc(j.payment)}" placeholder="e.g. PayPal">
+        <datalist id="pay-methods">${payList}</datalist></div>
+    </div>
+    <div class="form-group"><label><i class="fa-solid fa-list-check"></i> Status</label><select id="f-status">${statusOpts}</select>
+      <span class="form-hint">Status drives column placement: applied/verified/assessment/declined → Applied · accepted/on progress → Working On · finished/paid → Done / Paid.</span></div>
+    <div class="form-group"><label><i class="fa-solid fa-calendar-days"></i> Deadline <span class="opt">(optional)</span></label>
+      <input type="datetime-local" id="f-deadline" value="${esc(j.deadline||'')}">
+      <span class="form-hint">Gigs with a deadline show in the Upcoming Deadlines strip, soonest first.</span></div>
+    <div class="form-group"><label><i class="fa-solid fa-file-arrow-up"></i> Attachments <span class="opt">(one link per line)</span></label>
+      <textarea id="f-attach" placeholder="https://drive.google.com/…&#10;https://…/resume.pdf">${esc((j.attachments||[]).join('\n'))}</textarea></div>
+    <div class="form-group"><label><i class="fa-solid fa-note-sticky"></i> Notes <span class="opt">(optional)</span></label>
+      <textarea id="f-notes" placeholder="Deadlines, task type, contacts…">${esc(j.notes)}</textarea></div>`;
+  showModal(true);
+  body.querySelector('#f-platform').focus();
+  document.getElementById('m-save').onclick=()=>{
+    const platform=body.querySelector('#f-platform').value.trim();
+    const job=body.querySelector('#f-job').value.trim();
+    if(!platform&&!job){body.querySelector('#f-platform').focus();return}
+    const data={platform,job,url:body.querySelector('#f-url').value.trim(),
+      pay:body.querySelector('#f-pay').value.trim(),
+      payment:body.querySelector('#f-payment').value.trim(),
+      status:body.querySelector('#f-status').value,
+      deadline:body.querySelector('#f-deadline').value,
+      attachments:body.querySelector('#f-attach').value.split('\n').map(s=>s.trim()).filter(Boolean),
+      notes:body.querySelector('#f-notes').value.trim()};
+    if(editing){Object.assign(editing,data)}else{jobs.unshift({id:'j_'+Date.now(),added:Date.now(),...data})}
+    save();render();showModal(false);
+  };
+}
+function showModal(on){document.getElementById('modal').classList.toggle('active',on)}
+document.getElementById('modalClose').onclick=()=>showModal(false);
+document.getElementById('m-cancel').onclick=()=>showModal(false);
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')showModal(false)});
+
+/* ---- toolbar ---- */
+document.getElementById('addFab').onclick=()=>openModal(null);
+document.getElementById('search').addEventListener('input',e=>{query=e.target.value;render()});
+document.getElementById('exportBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(jobs,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='sidegig-tracker-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  URL.revokeObjectURL(a.href);flash('Exported');
+};
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+document.getElementById('importFile').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{
+    try{const data=JSON.parse(r.result);if(!Array.isArray(data))throw 0;
+      const known=new Set(STATUS_OPTIONS);
+      const clean=data.filter(d=>d&&(d.platform||d.job||d.name||d.source)).map((d,i)=>({
+        id:d.id||('imp_'+Date.now()+'_'+i),platform:String(d.platform||d.source||''),
+        job:String(d.job||d.name||''),url:d.url||'',pay:d.pay||'',payment:d.payment||'',
+        status:known.has(d.status)?d.status:'',deadline:d.deadline||'',
+        attachments:Array.isArray(d.attachments)?d.attachments:[],
+        notes:d.notes||'',added:d.added||Date.now()}));
+      if(!clean.length)throw 0;
+      const keyOf=j=>(j.url||'').trim().toLowerCase()||((j.platform+'|'+j.job).toLowerCase());
+      const have=new Set(jobs.map(keyOf));
+      const fresh=clean.filter(j=>!have.has(keyOf(j)));
+      const dupes=clean.length-fresh.length;
+      if(!fresh.length){alert(`All ${clean.length} jobs already present.`);return}
+      const msg=`Add ${fresh.length} new job${fresh.length>1?'s':''}?`+(dupes?` (${dupes} already present, skipped)`:' ');
+      if(confirm(msg)){jobs=fresh.concat(jobs);save();render();flash(`Added ${fresh.length}`)}
+    }catch(err){alert("That file didn't look like a valid tracker export.")}
+  };r.readAsText(f);e.target.value='';
+});
+document.getElementById('resetBtn').onclick=()=>{
+  if(confirm('Reset to the original 21 platforms? Current changes will be lost.')){
+    jobs=SEED.slice();save();render()}};
+
+/* ---- boot ---- */
+(async()=>{await load();render()})();
+</script>
+</body>
+</html>
