@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Side Gig Tracker</title>
+<title>Dashboard · Side Gig + Content Studio</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -44,6 +44,11 @@
   --border-width: 1px;
   --micro-gap: 8px;
   --transition-speed: 0.25s;
+  /* Content Studio platform colors */
+  --yt-red: #FF0000;
+  --ig-purple: #C13584;
+  --tt-dark: #010101;
+  --tt-teal: #69C9D0;
 }
 
 /* ======== 2. NEGATIVE CONSTRAINTS ======== */
@@ -55,7 +60,24 @@ a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 /* ======== 3. PAGE LAYOUT ======== */
-.page-wrap{max-width:1280px;margin:0 auto;padding:1.5rem 1.25rem 6rem}
+.page-wrap{max-width:1280px;margin:0 auto;padding:0 1.25rem 6rem}
+
+/* ======== 4. APP-LEVEL TAB NAV ======== */
+.app-nav{background:var(--water-care-dark);border-bottom:3px solid var(--primary-accent);
+  position:sticky;top:0;z-index:500}
+.app-nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:stretch;padding:0 1.25rem}
+.app-tab{display:flex;align-items:center;gap:.5rem;padding:.875rem 1.25rem;
+  font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  color:rgba(255,255,255,.6);border-bottom:3px solid transparent;margin-bottom:-3px;
+  cursor:pointer;transition:all var(--transition-speed);white-space:nowrap}
+.app-tab i{font-size:.85rem}
+.app-tab:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06)}
+.app-tab.active{color:#fff;border-bottom-color:var(--primary-accent)}
+.app-tab-lock{margin-left:auto;display:flex;align-items:center;gap:.5rem;
+  padding:.875rem 0;color:rgba(255,255,255,.5);font-size:.78rem;font-weight:600;
+  letter-spacing:.04em;cursor:pointer}
+.app-tab-lock:hover{color:rgba(255,255,255,.8)}
+.app-tab-lock i{font-size:.8rem}
 
 /* Header */
 .page-header{position:relative;overflow:hidden;
@@ -68,7 +90,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .page-header p{color:rgba(255,255,255,.8);font-size:.82rem;margin:.25rem 0 0}
 .page-header svg.wave{position:absolute;bottom:0;left:0;width:100%;height:40px}
 
-/* Tally stats — unified grid */
+/* Tally stats */
 .tally-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--border-width);
   background-color:var(--border-light);border:var(--border-width) solid var(--border-light);
   margin-bottom:1.25rem}
@@ -91,7 +113,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .search-box i{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
   color:var(--gray-400);font-size:.85rem}
 
-/* Buttons (design system) */
+/* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
   padding:.625rem 1.25rem;font-weight:600;cursor:pointer;text-transform:uppercase;
   letter-spacing:.05em;font-size:.8rem;border:var(--border-width) solid transparent;
@@ -105,8 +127,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .btn-danger:hover{background:var(--error-red);color:var(--putih-coway)}
 .btn-ghost{background:transparent;color:var(--slate-700);border-color:var(--border-light)}
 .btn-ghost:hover{background:var(--gray-100);border-color:var(--slate-700)}
+.btn-sm{padding:.4rem .875rem;font-size:.75rem}
 
-/* ======== 4. DEADLINES STRIP ======== */
+/* ======== 5. DEADLINES STRIP ======== */
 .deadlines-strip{margin-bottom:1.25rem;background:var(--putih-coway);
   border:var(--border-width) solid var(--border-light);padding:.75rem 1rem}
 .deadlines-strip .strip-head{display:flex;align-items:center;gap:.5rem;font-size:.8rem;
@@ -127,7 +150,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .dl-empty{font-size:.8rem;color:var(--border-light);padding:.375rem 0;
   display:flex;align-items:center;gap:.4rem}
 
-/* ======== 5. BOARD (4 columns) ======== */
+/* ======== 6. BOARD ======== */
 .board{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;align-items:start}
 .col-head{display:flex;align-items:center;gap:.5rem;padding:.125rem 0 .5rem}
 .col-head h2{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
@@ -142,13 +165,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .col.c-apply .col-head h2{color:var(--warning-orange)}
 .col.c-work .col-head h2{color:var(--success-green)}
 .col.c-done .col-head h2{color:var(--teal-accent)}
-/* accent strip on top of each col-body */
 .col.c-avail .col-body{border-top:3px solid var(--info-blue)}
 .col.c-apply .col-body{border-top:3px solid var(--warning-orange)}
 .col.c-work .col-body{border-top:3px solid var(--success-green)}
 .col.c-done .col-body{border-top:3px solid var(--teal-accent)}
 
-/* ======== 6. CARD ======== */
+/* ======== 7. CARD ======== */
 .card{background:var(--putih-coway);padding:.875rem;position:relative}
 .card.closed{opacity:.6}
 .card .top{display:flex;align-items:flex-start;gap:.5rem}
@@ -164,8 +186,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   align-items:center;justify-content:center;color:var(--gray-400);
   border:var(--border-width) solid transparent}
 .kebab:hover{background:var(--gray-100);border-color:var(--border-light);color:var(--text-dark)}
-
-/* Badges / chips */
 .chips{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.5rem}
 .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .5rem;
   font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
@@ -176,20 +196,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   border-color:var(--success-green)}
 .badge-method{background:var(--gray-100);color:var(--slate-700);border-color:var(--border-light)}
 .badge-dl{border-color:var(--border-light)}
-
-/* Attachments */
+.badge i{font-size:.6rem}
 .attach{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.5rem}
 .attach a{display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;font-weight:500;
   background:var(--info-light);color:var(--info-blue);padding:.2rem .5rem;
   border:var(--border-width) solid var(--info-blue)}
 .attach a:hover{background:var(--primary-accent);color:var(--putih-coway)}
-
-/* Notes */
 .card .notes{font-size:.78rem;color:var(--slate-700);margin-top:.5rem;
   white-space:pre-wrap;border-top:var(--border-width) dashed var(--border-light);
   padding-top:.5rem}
-
-/* Move buttons */
 .moves{display:flex;gap:.375rem;margin-top:.625rem}
 .move{flex:1;padding:.4rem .3rem;font-size:.7rem;font-weight:600;
   text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;
@@ -202,7 +217,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .empty{text-align:center;color:var(--gray-400);font-size:.78rem;padding:1.25rem .625rem;
   border:var(--border-width) dashed var(--border-light);background:var(--putih-coway)}
 
-/* ======== 7. CONTEXT MENU ======== */
+/* ======== 8. CONTEXT MENU ======== */
 .ctx-menu{position:absolute;top:2.25rem;right:.625rem;background:var(--putih-coway);
   border:var(--border-width) solid var(--text-dark);z-index:20;min-width:130px}
 .ctx-menu button{display:flex;width:100%;align-items:center;gap:.5rem;padding:.5rem .75rem;
@@ -212,14 +227,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .ctx-menu button:hover{background:var(--light-wash-blue)}
 .ctx-menu button.del{color:var(--error-red)}
 
-/* ======== 8. MODAL ======== */
+/* ======== 9. MODAL ======== */
 .modal-overlay{position:fixed;inset:0;background:rgba(44,62,80,.9);display:flex;
   align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;
   transition:opacity var(--transition-speed) linear;padding:1rem}
 .modal-overlay.active{opacity:1;pointer-events:auto}
 .modal-container{width:100%;max-width:500px;background:var(--putih-coway);
   border:var(--border-width) solid var(--border-light);position:relative;
-  /* disconnected container borders */
   background-image:
     linear-gradient(var(--border-light),var(--border-light)),linear-gradient(var(--border-light),var(--border-light)),
     linear-gradient(var(--border-light),var(--border-light)),linear-gradient(var(--border-light),var(--border-light));
@@ -228,6 +242,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     var(--border-width) calc(100% - var(--micro-gap)*2),var(--border-width) calc(100% - var(--micro-gap)*2);
   background-position:center top,center bottom,left center,right center;
   background-repeat:no-repeat}
+.modal-container.modal-wide{max-width:640px}
 .modal-header{display:flex;justify-content:space-between;align-items:center;
   border-bottom:var(--border-width) solid var(--border-light);padding:1rem 1.25rem}
 .modal-header h3{font-size:1.05rem;font-weight:700;color:var(--primary-accent);margin:0}
@@ -237,14 +252,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   flex-direction:column;gap:.875rem}
 .modal-footer{display:flex;justify-content:flex-end;gap:.625rem;
   border-top:var(--border-width) solid var(--border-light);padding:1rem 1.25rem}
-
-/* Form groups (design system) */
 .form-group{display:flex;flex-direction:column}
 .form-group label{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;
   color:var(--text-dark);margin-bottom:.35rem;font-weight:600;display:flex;
   align-items:center;gap:.3rem}
 .form-group label i{font-size:.7rem;color:var(--primary-accent);margin-right:.2rem}
-.badge i{font-size:.6rem}
 .form-group label .opt{font-weight:400;text-transform:none;letter-spacing:0;color:var(--gray-400);
   font-size:.72rem;margin-left:.15rem}
 .form-group .form-hint{font-size:.72rem;color:var(--slate-700);margin-top:.25rem}
@@ -263,7 +275,7 @@ select{-webkit-appearance:none;-moz-appearance:none;appearance:none;
   padding-right:2.5rem!important;cursor:pointer}
 textarea{resize:vertical;min-height:3.5rem}
 
-/* ======== 9. DOCKED FAB ======== */
+/* ======== 10. FAB + TOAST ======== */
 .docked-fab{position:fixed;right:0;bottom:5rem;background:var(--primary-accent);
   color:var(--putih-coway);border:2px solid var(--text-dark);border-right:none;
   padding:.75rem 1.25rem;display:flex;align-items:center;gap:.5rem;font-weight:700;
@@ -271,8 +283,6 @@ textarea{resize:vertical;min-height:3.5rem}
   z-index:900;transition:all var(--transition-speed)}
 .docked-fab:hover{background:var(--text-dark);color:var(--primary-accent);
   transform:translateX(-5px)}
-
-/* ======== 10. TOAST ======== */
 .toast-dock{position:fixed;bottom:0;right:0;display:flex;flex-direction:column;z-index:999;
   border-left:var(--border-width) solid var(--border-light);
   border-top:var(--border-width) solid var(--border-light);
@@ -285,11 +295,7 @@ textarea{resize:vertical;min-height:3.5rem}
 .toast-close{cursor:pointer;color:var(--border-light);font-size:.85rem;padding:.25rem}
 .toast-close:hover{color:var(--text-dark)}
 
-/* ======== 11. RESPONSIVE ======== */
-@media(max-width:1080px){.board{grid-template-columns:repeat(2,1fr)}.tally-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.board{grid-template-columns:1fr}.row2{grid-template-columns:1fr}
-  .tally-grid{grid-template-columns:repeat(2,1fr)}}
-/* ======== 12. PASSWORD GATE ======== */
+/* ======== 11. PASSWORD GATE ======== */
 .gate{position:fixed;inset:0;background:var(--gray-100);display:flex;align-items:center;
   justify-content:center;padding:1.25rem;z-index:1100}
 .gate-card{background:var(--putih-coway);border:var(--border-width) solid var(--border-light);
@@ -310,21 +316,266 @@ textarea{resize:vertical;min-height:3.5rem}
 .gate-actions{display:flex;gap:.625rem}
 .gate-actions .btn{flex:1}
 .gate-hint{font-size:.72rem;color:var(--slate-700);margin-top:1rem;line-height:1.5}
-/* ======== 13. BRANDED HEADER ======== */
-.site-header{background:var(--water-care-medium);color:#fff;position:relative;overflow:hidden;
-  margin-bottom:0}
-.site-header .hdr-content{position:relative;z-index:2;display:flex;align-items:center;
-  gap:1rem;padding:1.35rem 1.5rem 2.25rem}
-.site-header h1{font-size:1.35rem;font-weight:700;margin:0;letter-spacing:-.02em;color:#fff}
-.site-header h1 i{font-size:1.1rem;margin-right:.25rem}
-.site-header p{font-size:.82rem;margin:.2rem 0 0;color:rgba(255,255,255,.8)}
-.hdr-deco{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
-.hdr-deco .circles{position:absolute;right:-40px;top:-30px;width:200px;height:200px;
-  border:2px solid rgba(255,255,255,.08)}
-.hdr-deco .circles2{position:absolute;right:-20px;top:-10px;width:160px;height:160px;
-  border:2px solid rgba(255,255,255,.06)}
-.hdr-deco .dots{position:absolute;left:50%;top:8px;opacity:.12}
-.hdr-wave{display:block;width:100%;height:auto;position:absolute;bottom:-1px;left:0;z-index:2}
+
+/* ======== 12. CONTENT STUDIO ======== */
+#cs-panel{padding-top:1.25rem}
+
+/* Platform quick-link bar */
+.cs-platform-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;
+  margin-bottom:1.25rem}
+@media(max-width:700px){.cs-platform-bar{grid-template-columns:repeat(2,1fr)}}
+.cs-plat-link{display:flex;flex-direction:column;gap:0;
+  text-decoration:none;cursor:pointer;overflow:hidden;
+  border:var(--border-width) solid var(--border-light);
+  transition:transform var(--transition-speed),border-color var(--transition-speed)}
+.cs-plat-link:hover{transform:translateY(-2px);border-color:var(--primary-accent)}
+/* coloured top strip */
+.plat-top{height:5px;width:100%}
+.plat-yt .plat-top{background:linear-gradient(90deg,#FF0000,#FF6B6B)}
+.plat-ig .plat-top{background:linear-gradient(90deg,#833AB4,#FD1D1D,#FCB045)}
+.plat-tt-fashion .plat-top{background:linear-gradient(90deg,#010101,#69C9D0)}
+.plat-tt-travel .plat-top{background:linear-gradient(90deg,#69C9D0,#EE1D52)}
+/* body */
+.plat-body{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem;
+  background:var(--putih-coway)}
+.plat-icon-wrap{width:36px;height:36px;display:flex;align-items:center;
+  justify-content:center;font-size:1.3rem;flex:0 0 auto}
+.plat-yt .plat-icon-wrap{color:#FF0000}
+.plat-ig .plat-icon-wrap{background:linear-gradient(135deg,#833AB4,#FD1D1D,#FCB045);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.plat-tt-fashion .plat-icon-wrap{color:#010101}
+.plat-tt-travel .plat-icon-wrap{color:#69C9D0}
+.plat-text{flex:1;min-width:0}
+.plat-name{font-size:.85rem;font-weight:700;color:var(--slate-900);letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plat-sub{font-size:.7rem;color:var(--gray-400);font-weight:400;margin-top:.05rem}
+.plat-arrow{font-size:.7rem;color:var(--gray-400);flex:0 0 auto}
+
+/* Two-column CS layout */
+.cs-layout{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start}
+@media(max-width:900px){.cs-layout{grid-template-columns:1fr}}
+
+/* CS section box */
+.cs-box{background:var(--putih-coway);border:var(--border-width) solid var(--border-light)}
+.cs-box-head{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;
+  border-bottom:var(--border-width) solid var(--border-light)}
+.cs-box-head h2{font-size:.82rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--text-dark);margin:0;flex:1;
+  display:flex;align-items:center;gap:.35rem}
+.cs-box-head h2 i{color:var(--primary-accent);font-size:.75rem}
+.cs-box-count{font-size:.75rem;font-weight:600;color:var(--slate-700);
+  background:var(--gray-100);border:var(--border-width) solid var(--border-light);
+  padding:0 .5rem;margin-right:.5rem}
+
+/* Filter tab strip inside CS boxes */
+.cs-filter-tabs{display:flex;gap:0;background:var(--gray-100);
+  border-bottom:var(--border-width) solid var(--border-light)}
+.cs-ftab{padding:.5rem .875rem;font-size:.75rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--slate-700);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all var(--transition-speed)}
+.cs-ftab:hover{color:var(--text-dark);background:var(--light-wash-blue)}
+.cs-ftab.active{color:var(--primary-accent);border-bottom-color:var(--primary-accent);
+  background:var(--putih-coway)}
+
+/* Project cards */
+.proj-cards{padding:.75rem;display:flex;flex-direction:column;gap:.625rem;min-height:60px}
+.proj-card{border:var(--border-width) solid var(--border-light);padding:.75rem;position:relative}
+.proj-card-top{display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.375rem}
+.proj-card-top .pc-platform{font-size:.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;padding:.1rem .4rem;border:var(--border-width) solid transparent;
+  flex:0 0 auto}
+.pc-yt{background:#FFF0F0;color:#C00;border-color:#FFAAAA}
+.pc-ig{background:#FEF0FF;color:var(--ig-purple);border-color:#E8A0D0}
+.pc-tiktok{background:#F0F0F0;color:#333;border-color:#999}
+.proj-card-top .pc-title{font-weight:600;font-size:.9rem;letter-spacing:-.01em;
+  line-height:1.3;color:var(--slate-900);flex:1}
+.proj-card-meta{display:flex;align-items:center;gap:.375rem;flex-wrap:wrap;margin-bottom:.375rem}
+.proj-card-desc{font-size:.78rem;color:var(--slate-700);line-height:1.5}
+.proj-kebab{margin-left:auto;flex:0 0 auto;width:24px;height:24px;display:flex;
+  align-items:center;justify-content:center;color:var(--gray-400);font-size:.8rem;
+  border:var(--border-width) solid transparent;position:relative}
+.proj-kebab:hover{background:var(--gray-100);border-color:var(--border-light)}
+
+/* Status badges for content */
+.cs-badge{display:inline-flex;align-items:center;gap:.25rem;padding:.1rem .45rem;
+  font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  border:var(--border-width) solid transparent}
+.cs-badge-filming{background:var(--purple-light);color:var(--accent-purple);border-color:var(--accent-purple)}
+.cs-badge-editing{background:var(--warning-light);color:var(--amber-gold);border-color:var(--warning-orange)}
+.cs-badge-ideating{background:var(--info-light);color:var(--info-blue);border-color:var(--info-blue)}
+.cs-badge-posted{background:var(--success-light);color:var(--success-dark);border-color:var(--success-green)}
+.cs-badge-schedule{background:var(--teal-light);color:var(--teal-accent);border-color:var(--teal-accent)}
+.cs-badge-default{background:var(--gray-100);color:var(--slate-700);border-color:var(--border-light)}
+
+/* Ideas table */
+.cs-table-wrap{overflow-x:auto}
+.cs-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.cs-table th{padding:.5rem .75rem;text-align:left;font-size:.68rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--slate-700);
+  border-bottom:2px solid var(--border-light);background:var(--gray-100);white-space:nowrap}
+.cs-table td{padding:.5rem .75rem;border-bottom:var(--border-width) solid var(--gray-100);
+  vertical-align:top;line-height:1.4}
+.cs-table tr:last-child td{border-bottom:none}
+.cs-table tr:hover td{background:var(--light-wash-blue)}
+.cs-table .td-idea{font-weight:500;color:var(--slate-900);max-width:240px}
+.cs-table .td-platform .plat-chip{display:inline-flex;align-items:center;gap:.2rem;
+  font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+  padding:.1rem .4rem;border:var(--border-width) solid var(--border-light);
+  background:var(--gray-100);color:var(--slate-700);margin:.1rem .1rem 0 0}
+.cs-table .td-form{color:var(--slate-700);font-size:.75rem;max-width:120px}
+.cs-table .td-actions{white-space:nowrap}
+
+/* CS toolbar area */
+.cs-toolbar{display:flex;gap:.5rem;align-items:center;padding:.625rem .75rem;
+  border-bottom:var(--border-width) solid var(--border-light);background:var(--gray-100)}
+.cs-search{position:relative;flex:1 1 160px}
+.cs-search input{width:100%;padding:.45rem 2rem .45rem .625rem;
+  border:var(--border-width) solid var(--border-light);background:var(--putih-coway);
+  font-size:.8rem;color:var(--text-dark)}
+.cs-search input:focus{border-color:var(--primary-accent);background:var(--light-wash-blue)}
+.cs-search i{position:absolute;right:.6rem;top:50%;transform:translateY(-50%);
+  color:var(--gray-400);font-size:.75rem}
+
+/* Empty state inside CS */
+.cs-empty{text-align:center;color:var(--gray-400);font-size:.78rem;
+  padding:2rem 1rem;display:flex;flex-direction:column;align-items:center;gap:.5rem}
+.cs-empty i{font-size:1.5rem;opacity:.4}
+
+/* Multi-checkbox picker (platform / form) */
+.check-group{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.25rem}
+.check-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .625rem;
+  font-size:.75rem;font-weight:600;border:var(--border-width) solid var(--border-light);
+  background:var(--putih-coway);cursor:pointer;color:var(--slate-700);
+  transition:all var(--transition-speed);user-select:none}
+.check-pill:hover{border-color:var(--primary-accent);color:var(--primary-accent);background:var(--light-wash-blue)}
+.check-pill.selected{border-color:var(--primary-accent);background:var(--primary-accent);color:#fff}
+.check-pill i{font-size:.7rem}
+
+/* CS posting deadlines strip */
+.cs-deadlines{background:var(--putih-coway);border:var(--border-width) solid var(--border-light);
+  padding:.75rem 1rem;margin-bottom:1.25rem}
+.cs-deadlines .strip-head{display:flex;align-items:center;gap:.5rem;font-size:.8rem;
+  font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dark);
+  margin-bottom:.625rem}
+.cs-deadlines .strip-head i{color:var(--accent-purple)}
+.cs-dl-track{display:flex;gap:var(--border-width);overflow-x:auto;background:var(--border-light);
+  border:var(--border-width) solid var(--border-light)}
+.cs-dl-pill{flex:0 0 auto;min-width:160px;max-width:220px;padding:.625rem .75rem;
+  background:var(--putih-coway);cursor:pointer;display:flex;flex-direction:column;gap:.15rem;
+  text-align:left;transition:background var(--transition-speed)}
+.cs-dl-pill:hover{background:var(--light-wash-blue)}
+.cs-dl-pill .dl-plat{display:flex;align-items:center;gap:.3rem;font-size:.65rem;
+  font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.1rem}
+.cs-dl-pill .dl-when{font-size:.75rem;font-weight:700;text-transform:uppercase}
+.cs-dl-pill .dl-name{font-size:.825rem;font-weight:500;color:var(--text-dark);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-dl-pill .dl-date{font-size:.7rem;color:var(--slate-700)}
+.cs-dl-empty{font-size:.8rem;color:var(--gray-400);padding:.375rem 0;
+  display:flex;align-items:center;gap:.4rem}
+
+/* ======== 14. IDEA BANK ======== */
+.bank-toolbar{display:flex;flex-wrap:wrap;gap:.625rem;align-items:center;
+  margin-bottom:1.25rem}
+.bank-filters{display:flex;gap:var(--border-width);background:var(--border-light);
+  border:var(--border-width) solid var(--border-light);flex:0 0 auto}
+.bank-ftab{display:flex;align-items:center;gap:.4rem;padding:.5rem .875rem;
+  font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--slate-700);background:var(--putih-coway);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all var(--transition-speed)}
+.bank-ftab i{font-size:.75rem}
+.bank-ftab:hover{color:var(--text-dark);background:var(--light-wash-blue)}
+.bank-ftab.active{color:var(--primary-accent);border-bottom-color:var(--primary-accent)}
+.bank-ftab[data-bank-plat="instagram"].active{color:var(--ig-purple);border-bottom-color:var(--ig-purple)}
+.bank-ftab[data-bank-plat="tiktok"].active{color:#010101;border-bottom-color:#010101}
+.bank-ftab[data-bank-plat="youtube"].active{color:var(--yt-red);border-bottom-color:var(--yt-red)}
+.bank-cat-wrap select{padding:.45rem .875rem;font-size:.8rem;
+  border:var(--border-width) solid var(--border-light);background:var(--putih-coway);
+  color:var(--text-dark);min-width:160px}
+.bank-search-wrap{flex:1 1 180px}
+
+/* Card grid — 6 columns, portrait */
+.bank-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.625rem;align-items:start}
+@media(max-width:1100px){.bank-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:700px){.bank-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:420px){.bank-grid{grid-template-columns:repeat(2,1fr)}}
+
+.bank-card{background:var(--putih-coway);border:var(--border-width) solid var(--border-light);
+  display:flex;flex-direction:column;position:relative;overflow:hidden}
+/* Platform colour stripe on top */
+.bank-card .bc-stripe{height:4px;width:100%}
+.bank-card.bc-instagram .bc-stripe{background:linear-gradient(90deg,#833AB4,#FD1D1D,#FCB045)}
+.bank-card.bc-tiktok .bc-stripe{background:linear-gradient(90deg,#010101,#69C9D0)}
+.bank-card.bc-youtube .bc-stripe{background:linear-gradient(90deg,#FF0000,#FF6B6B)}
+.bank-card.bc-other .bc-stripe{background:var(--border-light)}
+
+/* Thumbnail area — portrait 4:5 ratio (like IG/TT feed) */
+.bc-thumb{position:relative;width:100%;padding-bottom:125%;/* 4:5 portrait */
+  background:var(--gray-100);overflow:hidden;flex:0 0 auto}
+.bc-thumb img{position:absolute;inset:0;width:100%;height:100%;
+  border:none;object-fit:cover}
+.bc-thumb .bc-play-overlay{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;background:rgba(0,0,0,.25);cursor:pointer;
+  transition:background var(--transition-speed);text-decoration:none}
+.bc-thumb .bc-play-overlay:hover{background:rgba(0,0,0,.45)}
+.bc-thumb .bc-play-overlay i{font-size:2rem;color:#fff;opacity:.85}
+.bc-thumb .bc-no-preview{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:.625rem}
+.bc-thumb .bc-no-preview i{font-size:2.25rem}
+.bc-thumb .bc-no-preview span{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;opacity:.7}
+/* thumbnail loading state */
+.bc-thumb-loading{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;color:var(--gray-400);font-size:.75rem;gap:.35rem}
+
+/* Card body */
+.bc-body{padding:.5rem;display:flex;flex-direction:column;gap:.3rem}
+.bc-title{font-size:.72rem;font-weight:600;color:var(--slate-900);line-height:1.3;
+  letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bc-meta{display:flex;align-items:center;gap:.25rem;flex-wrap:wrap}
+.bc-plat-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.08rem .3rem;
+  font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+  border:var(--border-width) solid transparent}
+.bc-plat-ig{background:#FEF0FF;color:var(--ig-purple);border-color:#E8A0D0}
+.bc-plat-tt{background:#F0F0F0;color:#333;border-color:#999}
+.bc-plat-yt{background:#FFF0F0;color:#C00;border-color:#FFAAAA}
+.bc-cat-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.08rem .3rem;
+  font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em;
+  background:var(--purple-light);color:var(--accent-purple);
+  border:var(--border-width) solid var(--accent-purple)}
+.bc-note{font-size:.7rem;color:var(--slate-700);line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Card footer with link button */
+.bc-footer{display:flex;align-items:center;gap:.25rem;padding:.375rem .5rem;
+  border-top:var(--border-width) solid var(--gray-100);margin-top:auto}
+.bc-link{flex:1;display:inline-flex;align-items:center;gap:.3rem;font-size:.65rem;
+  font-weight:600;color:var(--primary-accent);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.bc-link:hover{text-decoration:underline}
+.bc-link i{font-size:.6rem;flex:0 0 auto}
+.bc-actions{display:flex;gap:.2rem;flex:0 0 auto}
+.bc-btn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;border:var(--border-width) solid var(--border-light);
+  color:var(--gray-400);cursor:pointer;transition:all var(--transition-speed)}
+.bc-btn:hover{background:var(--gray-100);color:var(--text-dark)}
+.bc-btn.del:hover{background:var(--error-light);color:var(--error-red);border-color:var(--error-red)}
+
+/* Bank empty state */
+.bank-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;
+  gap:.75rem;padding:3rem 1rem;color:var(--gray-400)}
+.bank-empty i{font-size:2.5rem;opacity:.3}
+.bank-empty p{font-size:.85rem}
+
+/* ======== 13. RESPONSIVE ======== */
+@media(max-width:1080px){
+  .board{grid-template-columns:repeat(2,1fr)}
+  .tally-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .board{grid-template-columns:1fr}
+  .row2{grid-template-columns:1fr}
+  .tally-grid{grid-template-columns:repeat(2,1fr)}
+  .cs-layout{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -332,8 +583,8 @@ textarea{resize:vertical;min-height:3.5rem}
 <!-- Password Gate -->
 <div class="gate" id="gate">
   <div class="gate-card">
-    <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
-    <p class="sub">Enter your password to unlock your gigs. Same password on any device = same data, synced.</p>
+    <h1><i class="fa-solid fa-satellite-dish"></i> Dashboard</h1>
+    <p class="sub">Enter your password to unlock Side Gig Tracker + Content Studio. Same password = same data synced across devices.</p>
     <div class="form-group">
       <label><i class="fa-solid fa-lock"></i> Password</label>
       <input type="password" id="g-pass" placeholder="Your sync password" autocomplete="off">
@@ -342,39 +593,234 @@ textarea{resize:vertical;min-height:3.5rem}
     <div class="gate-actions">
       <button class="btn btn-primary" id="g-unlock"><i class="fa-solid fa-lock-open"></i> Unlock</button>
     </div>
-    <p class="gate-hint"><i class="fa-solid fa-circle-info"></i> First time? Pick any password you'll remember — it becomes your sync key. Use the same password on another device to access the same gigs. There's no recovery, so don't forget it.</p>
+    <p class="gate-hint"><i class="fa-solid fa-circle-info"></i> First time? Pick any password — it becomes your sync key. Use the same password on another device to access the same data. There's no recovery, so don't forget it.</p>
   </div>
 </div>
 
-<div class="page-wrap" id="app" style="display:none">
-  <div class="page-header">
-    <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
-    <p>Track every side gig from discovery to payday — cards auto-sort by status across four columns.</p>
-    <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
-      <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
-      <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
-    </svg>
-  </div>
+<!-- App shell (hidden until unlocked) -->
+<div id="app" style="display:none">
 
-  <div class="tally-grid" id="tally"></div>
-  <div class="deadlines-strip" id="deadlines"></div>
-
-  <div class="toolbar">
-    <div class="search-box">
-      <i class="fa-solid fa-magnifying-glass"></i>
-      <input id="search" placeholder="Search platform, job, status, notes…" type="text" autocomplete="off">
+  <!-- Top nav with tabs -->
+  <nav class="app-nav">
+    <div class="app-nav-inner">
+      <button class="app-tab active" id="tab-gigs" onclick="switchTab('gigs')">
+        <i class="fa-solid fa-satellite-dish"></i> Side Gigs
+      </button>
+      <button class="app-tab" id="tab-content" onclick="switchTab('content')">
+        <i class="fa-solid fa-clapperboard"></i> Content Studio
+      </button>
+      <button class="app-tab" id="tab-bank" onclick="switchTab('bank')">
+        <i class="fa-solid fa-bookmark"></i> Idea Bank
+      </button>
+      <span class="app-tab-lock" id="lockBtn"><i class="fa-solid fa-lock"></i> Lock</span>
     </div>
-    <button class="btn btn-outline" id="exportBtn"><i class="fa-solid fa-file-export"></i> Export</button>
-    <button class="btn btn-outline" id="importBtn"><i class="fa-solid fa-file-import"></i> Import</button>
-    <input type="file" id="importFile" accept="application/json" hidden>
-    <button class="btn btn-ghost" id="resetBtn"><i class="fa-solid fa-arrow-rotate-left"></i> Reset</button>
-    <button class="btn btn-ghost" id="lockBtn" style="margin-left:auto"><i class="fa-solid fa-lock"></i> Lock</button>
+  </nav>
+
+  <!-- ===== SIDE GIGS PANEL ===== -->
+  <div id="gigs-panel" class="page-wrap" style="padding-top:1.25rem">
+    <div class="page-header">
+      <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
+      <p>Track every side gig from discovery to payday — cards auto-sort by status across four columns.</p>
+      <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
+        <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
+        <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
+      </svg>
+    </div>
+    <div class="tally-grid" id="tally"></div>
+    <div class="deadlines-strip" id="deadlines"></div>
+    <div class="toolbar">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="search" placeholder="Search platform, job, status, notes…" type="text" autocomplete="off">
+      </div>
+      <button class="btn btn-outline" id="exportBtn"><i class="fa-solid fa-file-export"></i> Export</button>
+      <button class="btn btn-outline" id="importBtn"><i class="fa-solid fa-file-import"></i> Import</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+      <button class="btn btn-ghost" id="resetBtn"><i class="fa-solid fa-arrow-rotate-left"></i> Reset</button>
+    </div>
+    <div class="board" id="board"></div>
   </div>
 
-  <div class="board" id="board"></div>
+  <!-- ===== CONTENT STUDIO PANEL ===== -->
+  <div id="cs-panel" class="page-wrap" style="display:none">
+
+    <!-- Studio header -->
+    <div class="page-header" style="background:linear-gradient(135deg,#1a0533 0%,#7A5AF8 100%)">
+      <h1><i class="fa-solid fa-clapperboard"></i> Content Studio</h1>
+      <p>Manage projects, track ideas, and link to your platforms — all in one place.</p>
+      <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
+        <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
+        <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
+      </svg>
+    </div>
+
+    <!-- Platform quick-links -->
+    <div class="cs-platform-bar">
+      <a class="cs-plat-link plat-yt" href="https://studio.youtube.com" target="_blank" rel="noopener">
+        <div class="plat-top"></div>
+        <div class="plat-body">
+          <div class="plat-icon-wrap"><i class="fa-brands fa-youtube"></i></div>
+          <div class="plat-text">
+            <div class="plat-name">YouTube</div>
+            <div class="plat-sub">Studio</div>
+          </div>
+          <i class="fa-solid fa-arrow-up-right-from-square plat-arrow"></i>
+        </div>
+      </a>
+      <a class="cs-plat-link plat-ig" href="https://www.instagram.com/" target="_blank" rel="noopener">
+        <div class="plat-top"></div>
+        <div class="plat-body">
+          <div class="plat-icon-wrap"><i class="fa-brands fa-instagram"></i></div>
+          <div class="plat-text">
+            <div class="plat-name">Instagram</div>
+            <div class="plat-sub">Feed</div>
+          </div>
+          <i class="fa-solid fa-arrow-up-right-from-square plat-arrow"></i>
+        </div>
+      </a>
+      <a class="cs-plat-link plat-tt-fashion" href="https://www.tiktok.com/@yourtiktok" target="_blank" rel="noopener" id="tt-fashion-link">
+        <div class="plat-top"></div>
+        <div class="plat-body">
+          <div class="plat-icon-wrap"><i class="fa-brands fa-tiktok"></i></div>
+          <div class="plat-text">
+            <div class="plat-name">TikTok</div>
+            <div class="plat-sub">Fashion</div>
+          </div>
+          <i class="fa-solid fa-arrow-up-right-from-square plat-arrow"></i>
+        </div>
+      </a>
+      <a class="cs-plat-link plat-tt-travel" href="https://www.tiktok.com/@yourtiktok" target="_blank" rel="noopener" id="tt-travel-link">
+        <div class="plat-top"></div>
+        <div class="plat-body">
+          <div class="plat-icon-wrap"><i class="fa-brands fa-tiktok"></i></div>
+          <div class="plat-text">
+            <div class="plat-name">TikTok</div>
+            <div class="plat-sub">Travel</div>
+          </div>
+          <i class="fa-solid fa-arrow-up-right-from-square plat-arrow"></i>
+        </div>
+      </a>
+    </div>
+
+    <!-- Posting deadlines strip -->
+    <div class="cs-deadlines" id="cs-deadlines"></div>
+
+    <!-- Two-column layout -->
+    <div class="cs-layout">
+
+      <!-- LEFT: Project Tracker -->
+      <div class="cs-box" id="proj-box">
+        <div class="cs-box-head">
+          <h2><i class="fa-solid fa-film"></i> Project Tracker</h2>
+          <span class="cs-box-count" id="proj-count">0</span>
+          <button class="btn btn-primary btn-sm" id="addProjBtn"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+        <div class="cs-filter-tabs">
+          <button class="cs-ftab active" data-proj-filter="in-progress" onclick="setProjFilter('in-progress',this)">In Progress</button>
+          <button class="cs-ftab" data-proj-filter="completed" onclick="setProjFilter('completed',this)">Completed</button>
+          <button class="cs-ftab" data-proj-filter="all" onclick="setProjFilter('all',this)">All</button>
+        </div>
+        <div class="proj-cards" id="proj-cards"></div>
+      </div>
+
+      <!-- RIGHT: Content Ideas -->
+      <div class="cs-box" id="ideas-box">
+        <div class="cs-box-head">
+          <h2><i class="fa-solid fa-lightbulb"></i> Content Ideas</h2>
+          <span class="cs-box-count" id="ideas-count">0</span>
+          <button class="btn btn-primary btn-sm" id="addIdeaBtn"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+        <div class="cs-filter-tabs">
+          <button class="cs-ftab active" data-idea-filter="ideas" onclick="setIdeaFilter('ideas',this)">Content Ideas</button>
+          <button class="cs-ftab" data-idea-filter="posted" onclick="setIdeaFilter('posted',this)">Posted</button>
+        </div>
+        <div class="cs-toolbar">
+          <div class="cs-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="idea-search" placeholder="Search ideas…" type="text" autocomplete="off">
+          </div>
+        </div>
+        <div class="cs-table-wrap">
+          <table class="cs-table" id="ideas-table">
+            <thead>
+              <tr>
+                <th>Idea</th>
+                <th>Platform</th>
+                <th>Form</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ideas-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /cs-layout -->
+  </div><!-- /cs-panel -->
+
+  <!-- ===== IDEA BANK PANEL ===== -->
+  <div id="bank-panel" class="page-wrap" style="display:none">
+    <div class="page-header" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%)">
+      <h1><i class="fa-solid fa-bookmark"></i> Idea Bank</h1>
+      <p>Save inspiration from TikTok, Instagram, and YouTube — video previews, categories, and quick links.</p>
+      <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
+        <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
+        <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
+      </svg>
+    </div>
+
+    <!-- Bank toolbar -->
+    <div class="bank-toolbar">
+      <div class="bank-filters" id="bank-plat-filters">
+        <button class="bank-ftab active" data-bank-plat="all" onclick="setBankFilter('all',this)"><i class="fa-solid fa-border-all"></i> All</button>
+        <button class="bank-ftab" data-bank-plat="instagram" onclick="setBankFilter('instagram',this)"><i class="fa-brands fa-instagram"></i> Instagram</button>
+        <button class="bank-ftab" data-bank-plat="tiktok" onclick="setBankFilter('tiktok',this)"><i class="fa-brands fa-tiktok"></i> TikTok</button>
+        <button class="bank-ftab" data-bank-plat="youtube" onclick="setBankFilter('youtube',this)"><i class="fa-brands fa-youtube"></i> YouTube</button>
+      </div>
+      <div class="bank-cat-wrap">
+        <select id="bank-cat-filter" onchange="renderBank()">
+          <option value="">All categories</option>
+          <option>daily life</option>
+          <option>fashion</option>
+          <option>travel</option>
+          <option>food</option>
+          <option>room decor</option>
+          <option>tech</option>
+          <option>vlog</option>
+          <option>other</option>
+        </select>
+      </div>
+      <div class="bank-search-wrap">
+        <div class="cs-search" style="min-width:180px">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="bank-search" placeholder="Search inspo…" type="text" autocomplete="off">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="addBankBtn"><i class="fa-solid fa-plus"></i> Add Inspo</button>
+    </div>
+
+    <div class="bank-grid" id="bank-grid"></div>
+  </div><!-- /bank-panel -->
+
+</div><!-- /app -->
+
+<!-- Bank modal -->
+<div class="modal-overlay" id="bankModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 id="bankModalTitle">Add Inspo</h3>
+      <button id="bankModalClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="bankModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="bank-cancel">Cancel</button>
+      <button class="btn btn-primary" id="bank-save">Save</button>
+    </div>
+  </div>
 </div>
 
-<!-- Docked FAB (inside app, only shows when logged in) -->
+<!-- Docked FAB -->
 <button class="docked-fab" id="addFab" style="display:none"><i class="fa-solid fa-bolt"></i> New Gig</button>
 
 <!-- Toast -->
@@ -386,37 +832,80 @@ textarea{resize:vertical;min-height:3.5rem}
   </div>
 </div>
 
-<!-- Modal -->
-<div class="modal-overlay" id="modal">
+<!-- Gig Modal -->
+<div class="modal-overlay" id="gigModal">
   <div class="modal-container">
     <div class="modal-header">
-      <h3 id="modalTitle">Add Gig</h3>
-      <button id="modalClose"><i class="fa-solid fa-xmark"></i></button>
+      <h3 id="gigModalTitle">Add Gig</h3>
+      <button id="gigModalClose"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-body" id="gigModalBody"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" id="m-cancel">Cancel</button>
-      <button class="btn btn-primary" id="m-save">Save</button>
+      <button class="btn btn-ghost" id="gig-cancel">Cancel</button>
+      <button class="btn btn-primary" id="gig-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal-overlay" id="projModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 id="projModalTitle">Add Project</h3>
+      <button id="projModalClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="projModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="proj-cancel">Cancel</button>
+      <button class="btn btn-primary" id="proj-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Idea Modal -->
+<div class="modal-overlay" id="ideaModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 id="ideaModalTitle">Add Idea</h3>
+      <button id="ideaModalClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="ideaModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="idea-cancel">Cancel</button>
+      <button class="btn btn-primary" id="idea-save">Save</button>
     </div>
   </div>
 </div>
 
 <script>
-const KEY='sidegig_jobs_v3';
-const SECTIONS=[
+/* ================================================================
+   CONFIG — Supabase
+================================================================ */
+const SB_URL = "https://mjfsihoqcuwhgnchgsgz.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qZnNpaG9xY3V3aGduY2hnc2d6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0MDE2ODMsImV4cCI6MjEwMDk3NzY4M30.ozsM0dWNB62u6QDqsByKioHmAu5dvH5-zfwM3Oisqfg";
+
+let sb = null, passHash = null;
+const HASH_KEY = 'sidegig_pass_hash';
+const CACHE_KEY = 'sidegig_cloud_cache';
+const CS_CACHE_KEY = 'content_studio_cache';
+
+/* ================================================================
+   GIG TRACKER DATA
+================================================================ */
+const SECTIONS = [
   {id:'available',label:'Available',cls:'c-avail'},
   {id:'applied',label:'Applied',cls:'c-apply'},
   {id:'working',label:'Working On',cls:'c-work'},
   {id:'done',label:'Done / Paid',cls:'c-done'},
 ];
-const STATUS_OPTIONS=['','applied','verified','assessment','accepted','declined','on progress','finished','paid'];
-const STATUS_GROUP={
+const STATUS_OPTIONS = ['','applied','verified','assessment','accepted','declined','on progress','finished','paid'];
+const STATUS_GROUP = {
   '':'available',
   'applied':'applied','verified':'applied','assessment':'applied','declined':'applied',
   'accepted':'working','on progress':'working','finished':'done','paid':'done'
 };
-const CLOSED=new Set(['declined']);
-const STATUS_STYLE={
+const CLOSED = new Set(['declined']);
+const STATUS_STYLE = {
   'applied':     ['var(--info-light)','var(--info-blue)','var(--info-blue)'],
   'verified':    ['var(--teal-light)','var(--teal-accent)','var(--teal-accent)'],
   'assessment':  ['var(--purple-light)','var(--accent-purple)','var(--accent-purple)'],
@@ -426,8 +915,8 @@ const STATUS_STYLE={
   'finished':    ['var(--gray-100)','var(--slate-700)','var(--border-light)'],
   'paid':        ['var(--success-light)','var(--success-dark)','var(--success-green)'],
 };
-const PAYMENT_SUGGEST=['PayPal','Payoneer','Wise','Bank transfer','Direct deposit','Crypto','Gift card','Cheque'];
-const SEED=[
+const PAYMENT_SUGGEST = ['PayPal','Payoneer','Wise','Bank transfer','Direct deposit','Crypto','Gift card','Cheque'];
+const GIG_SEED = [
   ['Outlier AI','https://outlier.ai/','Verification'],
   ['AttaPoll','',''],['ViewPoints by Meta','',''],
   ['OneForma','https://www.oneforma.com/jobs/page/2/','Profile Setup'],
@@ -448,122 +937,240 @@ const SEED=[
   ['Ceipal','https://candidateportal.ceipal.com/career-jobs',''],
   ['BabelAudio','https://dashboard.babel.audio/jobs','Verification'],
 ].map((r,i)=>{
-  // give a couple of seeds sample deadlines so the strip is visible on first load
   let dl='';
-  if(i===0) { const d=new Date(); d.setDate(d.getDate()+3); dl=d.toISOString().slice(0,16); } // Outlier AI: 3 days
-  if(i===3) { const d=new Date(); d.setDate(d.getDate()+7); dl=d.toISOString().slice(0,16); } // OneForma: 7 days
+  if(i===0){const d=new Date();d.setDate(d.getDate()+3);dl=d.toISOString().slice(0,16)}
+  if(i===3){const d=new Date();d.setDate(d.getDate()+7);dl=d.toISOString().slice(0,16)}
   return {id:'seed_'+i,platform:r[0],job:'',url:r[1],pay:'',payment:'',
     status:'',notes:r[2]?('Onboarding: '+r[2]):'',attachments:[],deadline:dl,added:Date.now()};
 });
 
-let jobs=[],query='',openMenu=null;
+let jobs = [], gigQuery = '', openMenu = null;
 
-/* ================= CONFIG — paste your Supabase values here ================= */
-const SB_URL  = "https://mjfsihoqcuwhgnchgsgz.supabase.co";
-const SB_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qZnNpaG9xY3V3aGduY2hnc2d6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0MDE2ODMsImV4cCI6MjEwMDk3NzY4M30.ozsM0dWNB62u6QDqsByKioHmAu5dvH5-zfwM3Oisqfg";
-/* ============================================================================ */
-let sb=null, passHash=null;
-const CACHE_KEY='sidegig_cloud_cache';
-const HASH_KEY='sidegig_pass_hash';
+/* ================================================================
+   CONTENT STUDIO DATA
+================================================================ */
+const PROJ_STATUS_DONE = new Set(['posted','done','published']);
+const IDEA_STATUS = ['','ideating','filming','editing','schedule upload','posted'];
+
+const PROJ_SEED = [
+  {id:'p1',platform:'youtube',title:'Thailand Vlog',form:'youtube videos',scheduledDate:'February 20, 2025',desc:'vlog during thailand trip',status:'filming'},
+  {id:'p2',platform:'youtube',title:'DJI Cosmo Pocket 3 Unboxing + Test Shot',form:'youtube videos',scheduledDate:'July 5, 2025',desc:'unboxing the camera + testing out the camera',status:'posted'},
+  {id:'p3',platform:'youtube',title:'Year-End Trip Vlog',form:'youtube videos',scheduledDate:'',desc:'bali & belitung trip during end of the year',status:'editing'},
+  {id:'p4',platform:'youtube',title:'Bali Trip 2025',form:'youtube videos',scheduledDate:'July 11, 2025',desc:'farewell trip',status:'editing'},
+  {id:'p5',platform:'youtube',title:'Unboxing + Setup MacBook Air M3',form:'youtube videos',scheduledDate:'',desc:'',status:'filming'},
+  {id:'p6',platform:'youtube',title:'Unboxing iPad Air 5 (M1) + Apple Pencil Gen 2 + Accessories',form:'',scheduledDate:'',desc:'',status:'ideation'},
+];
+
+const IDEA_SEED = [
+  {id:'i1',idea:'dji osmo pocket 3 unboxing',form:'short videos, youtube video',platform:'instagram, tiktok, youtube',posted:false,status:'filming'},
+  {id:'i2',idea:"what's in my ipad",form:'carousel, short videos, youtube video',platform:'instagram, tiktok, youtube',posted:false,status:'schedule upload'},
+  {id:'i3',idea:"what's in my phone",form:'short videos, youtube video',platform:'instagram, tiktok, youtube',posted:false,status:''},
+  {id:'i4',idea:'dji osmo pocket 3 trend',form:'short videos',platform:'instagram, tiktok',posted:false,status:''},
+  {id:'i5',idea:'a week in my life',form:'youtube video',platform:'youtube',posted:false,status:'ideating'},
+  {id:'i6',idea:'weekend in my life',form:'youtube video',platform:'youtube',posted:false,status:''},
+  {id:'i7',idea:'trying out viral places in Blok M / Jaksel / Jakbar',form:'carousel, short videos, youtube video',platform:'instagram, tiktok, youtube',posted:false,status:''},
+  {id:'i8',idea:'wfc recommendation',form:'carousel, short videos, youtube video',platform:'instagram, tiktok, youtube',posted:false,status:''},
+  {id:'i9',idea:'thailand vlog',form:'youtube video',platform:'youtube',posted:false,status:''},
+  {id:'i10',idea:'isi galeriku setelah trip ke [Danang, Vietnam]',form:'carousel',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i11',idea:'rekomendasi cafe nugas di [semarang]',form:'carousel',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i12',idea:'japan haul',form:'short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i13',idea:'pack with me for [Japan]',form:'short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i14',idea:'everything i ate in [Japan]',form:'carousel',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i15',idea:'the most unique vending machine from my solo trip to Japan',form:'carousel',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i16',idea:'rekomendasi coffee shop di [Jepang]',form:'short videos',platform:'instagram',posted:false,status:'ideating'},
+  {id:'i17',idea:'spill budget ke jepang',form:'short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i18',idea:'where to go [bangkok]',form:'carousel',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i19',idea:'itinerary [Negara] XDYN',form:'carousel, short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i20',idea:'where i travel to in 2024',form:'carousel, short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i21',idea:'pecinta anabul wajib kesini',form:'carousel',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i22',idea:'pov : your outfit in [Japan]',form:'carousel, short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i23',idea:'pov : healing your innerchild (disneyland travel)',form:'short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i24',idea:'pov : you finally tried this viral camera for vlogging',form:'short videos',platform:'instagram',posted:false,status:'ideating'},
+  {id:'i25',idea:'where to shop in [Bangkok]',form:'carousel, short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i26',idea:'a little bit of bali',form:'carousel, short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i27',idea:"what's in my backpack",form:'carousel, short videos',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i28',idea:'#throwback my first overseas solo trip',form:'carousel',platform:'tiktok',posted:false,status:'ideating'},
+  {id:'i29',idea:'solo date - introvert vlog',form:'short videos',platform:'instagram, tiktok, youtube',posted:false,status:''},
+  {id:'i30',idea:'cafe I recently went to',form:'carousel',platform:'',posted:false,status:''},
+];
+
+let projects = [], ideas = [], ideaBank = [], projFilter = 'in-progress', ideaFilter = 'ideas', ideaQuery = '', bankPlatFilter = 'all';
+
+/* ================================================================
+   HELPERS
+================================================================ */
+const esc = s => (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tidyUrl = u => !u?'':(/^https?:\/\//i.test(u)?u:'https://'+u);
+function hostOf(u){try{return new URL(tidyUrl(u)).host.replace(/^www\./,'')}catch(e){return u}}
+function fileLabel(u){try{const p=new URL(tidyUrl(u)).pathname.split('/').filter(Boolean).pop();return decodeURIComponent(p||hostOf(u))}catch(e){return u}}
+const sectionOf = j => STATUS_GROUP[j.status]||'available';
 
 async function sha256(str){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  const buf = await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-/* ---- storage: Supabase keyed by password hash ---- */
-const store={
-  async get(){
-    const {data,error}=await sb.from('gig_data').select('jobs').eq('pass_hash',passHash).maybeSingle();
+/* ================================================================
+   SUPABASE STORAGE
+================================================================ */
+const store = {
+  async get(table, hash){
+    const {data,error} = await sb.from(table).select('data').eq('pass_hash', hash).maybeSingle();
     if(error) throw error;
-    return data ? JSON.stringify(data.jobs) : null;
+    return data ? data.data : null;
   },
-  async set(v){
-    try{localStorage.setItem(CACHE_KEY,v)}catch(e){}
-    const {error}=await sb.from('gig_data')
-      .upsert({pass_hash:passHash,jobs:JSON.parse(v),updated_at:new Date().toISOString()});
+  async set(table, hash, val){
+    const {error} = await sb.from(table)
+      .upsert({pass_hash:hash, data:val, updated_at:new Date().toISOString()});
     if(error) throw error;
   }
 };
-async function load(){
-  let raw=null;
-  try{raw=await store.get()}
-  catch(e){try{raw=localStorage.getItem(CACHE_KEY)}catch(_){} console.error(e)}
-  if(raw){try{jobs=JSON.parse(raw);return}catch(e){}}
-  // migrate from old browser-only version if exists
+
+async function loadGigs(){
+  let raw = null;
+  try{raw = await store.get('gig_data_v2', passHash)}
+  catch(e){
+    // fallback: try legacy table structure
+    try{
+      const {data} = await sb.from('gig_data').select('jobs').eq('pass_hash',passHash).maybeSingle();
+      if(data) raw = data.jobs;
+    }catch(_){}
+    try{raw = raw || JSON.parse(localStorage.getItem(CACHE_KEY))}catch(_){}
+    console.error(e);
+  }
+  if(raw){try{jobs=Array.isArray(raw)?raw:JSON.parse(raw);return}catch(e){}}
   try{const old=localStorage.getItem('sidegig_jobs_v3');
-    if(old){const a=JSON.parse(old);if(Array.isArray(a)&&a.length){jobs=a;await save(true);return}}}catch(e){}
-  jobs=SEED.slice();await save(true);
-}
-async function save(silent){
-  try{await store.set(JSON.stringify(jobs));if(!silent)flash('Synced')}
-  catch(e){console.error(e);if(!silent)flash('Offline — saved locally')}
+    if(old){const a=JSON.parse(old);if(Array.isArray(a)&&a.length){jobs=a;await saveGigs(true);return}}}catch(e){}
+  jobs = GIG_SEED.slice(); await saveGigs(true);
 }
 
-/* ---- toast ---- */
+async function saveGigs(silent){
+  try{
+    localStorage.setItem(CACHE_KEY, JSON.stringify(jobs));
+    await store.set('gig_data_v2', passHash, jobs);
+    if(!silent) flash('Synced');
+  }catch(e){console.error(e);if(!silent)flash('Offline — saved locally')}
+}
+
+async function loadCS(){
+  let raw = null;
+  try{raw = await store.get('cs_data', passHash)}
+  catch(e){try{raw = JSON.parse(localStorage.getItem(CS_CACHE_KEY))}catch(_){}console.error(e)}
+  if(raw){
+    try{
+      const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      projects = d.projects||PROJ_SEED.slice();
+      ideas = d.ideas||IDEA_SEED.slice();
+      ideaBank = d.ideaBank||[];
+      return;
+    }catch(e){}
+  }
+  projects = PROJ_SEED.slice();
+  ideas = IDEA_SEED.slice();
+  ideaBank = [];
+  await saveCS(true);
+}
+
+async function saveCS(silent){
+  const payload = {projects, ideas, ideaBank};
+  try{
+    localStorage.setItem(CS_CACHE_KEY, JSON.stringify(payload));
+    await store.set('cs_data', passHash, payload);
+    if(!silent) flash('Synced');
+  }catch(e){console.error(e);if(!silent)flash('Offline — saved locally')}
+}
+
+/* ================================================================
+   TOAST
+================================================================ */
 let flashT;
 function flash(msg){
-  const t=document.getElementById('toast');
-  document.getElementById('toastMsg').textContent=msg;
-  t.classList.add('show');clearTimeout(flashT);flashT=setTimeout(()=>t.classList.remove('show'),2000);
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show'); clearTimeout(flashT);
+  flashT = setTimeout(()=>t.classList.remove('show'),2000);
 }
-document.getElementById('toastClose').onclick=()=>document.getElementById('toast').classList.remove('show');
+document.getElementById('toastClose').onclick = ()=>document.getElementById('toast').classList.remove('show');
 
-/* ---- helpers ---- */
-const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const tidyUrl=u=>!u?'':(/^https?:\/\//i.test(u)?u:'https://'+u);
-function hostOf(u){try{return new URL(tidyUrl(u)).host.replace(/^www\./,'')}catch(e){return u}}
-function fileLabel(u){try{const p=new URL(tidyUrl(u)).pathname.split('/').filter(Boolean).pop();
-  return decodeURIComponent(p||hostOf(u))}catch(e){return u}}
-const sectionOf=j=>STATUS_GROUP[j.status]||'available';
+/* ================================================================
+   TAB SWITCHING
+================================================================ */
+let activeTab = 'gigs';
+function switchTab(tab){
+  activeTab = tab;
+  document.getElementById('tab-gigs').classList.toggle('active', tab==='gigs');
+  document.getElementById('tab-content').classList.toggle('active', tab==='content');
+  document.getElementById('tab-bank').classList.toggle('active', tab==='bank');
+  document.getElementById('gigs-panel').style.display = tab==='gigs' ? '' : 'none';
+  document.getElementById('cs-panel').style.display = tab==='content' ? '' : 'none';
+  document.getElementById('bank-panel').style.display = tab==='bank' ? '' : 'none';
+  document.getElementById('addFab').style.display = tab==='gigs' ? '' : 'none';
+  if(tab==='content') renderCS();
+  if(tab==='bank') renderBank();
+}
 
+/* ================================================================
+   GIG TRACKER RENDER
+================================================================ */
 function urgColor(u){
   return u==='overdue'?['var(--error-light)','var(--error-red)']
        : u==='soon'?['var(--warning-light)','var(--warning-orange)']
        : ['var(--info-light)','var(--info-blue)'];
 }
 function fmtDeadline(iso){
-  const d=new Date(iso);
+  const d = new Date(iso);
   return d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 function deadlineInfo(iso){
-  if(!iso) return null;const d=new Date(iso);if(isNaN(d)) return null;
-  const ms=d-new Date(),hrs=ms/36e5;let urg='later',rel='';
+  if(!iso) return null; const d = new Date(iso); if(isNaN(d)) return null;
+  const ms = d - new Date(), hrs = ms/36e5; let urg='later', rel='';
   if(ms<0){urg='overdue';const od=Math.floor(-hrs/24);rel=od>=1?`overdue ${od}d`:'overdue'}
   else if(hrs<48){urg='soon';rel=hrs<1?'in <1h':hrs<24?`in ${Math.round(hrs)}h`:'tomorrow'}
   else{urg='later';rel=`in ${Math.floor(hrs/24)}d`}
   return{date:d,label:fmtDeadline(iso),rel,urg};
 }
-function matches(j){if(!query)return true;const q=query.toLowerCase();
+function gigMatches(j){
+  if(!gigQuery) return true; const q = gigQuery.toLowerCase();
   return[j.platform,j.job,j.status,j.notes,j.pay,j.payment,j.url,(j.attachments||[]).join(' ')]
-    .some(v=>(v||'').toLowerCase().includes(q))}
+    .some(v=>(v||'').toLowerCase().includes(q));
+}
 
-/* ---- render ---- */
-function render(){
+const STATUS_ICON = {
+  'applied':'fa-paper-plane','verified':'fa-shield-halved','assessment':'fa-flask-vial',
+  'accepted':'fa-handshake','on progress':'fa-spinner','declined':'fa-circle-xmark',
+  'finished':'fa-flag-checkered','paid':'fa-wallet'
+};
+function statusBadge(s){
+  if(!s) return ''; const st = STATUS_STYLE[s]; if(!st) return '';
+  const ico = STATUS_ICON[s]||'';
+  return `<span class="badge" style="background:${st[0]};color:${st[1]};border-color:${st[2]}">${ico?`<i class="fa-solid ${ico}"></i> `:''}${esc(s)}</span>`;
+}
+
+function renderGigs(){
   renderDeadlines();
-  const c=s=>jobs.filter(j=>sectionOf(j)===s).length;
-  document.getElementById('tally').innerHTML=
+  const c = s => jobs.filter(j=>sectionOf(j)===s).length;
+  document.getElementById('tally').innerHTML =
     `<div class="tally-cell tc-avail"><b>${c('available')}</b><span><i class="fa-solid fa-layer-group"></i> Available</span></div>
      <div class="tally-cell tc-apply"><b>${c('applied')}</b><span><i class="fa-solid fa-paper-plane"></i> Applied</span></div>
      <div class="tally-cell tc-work"><b>${c('working')}</b><span><i class="fa-solid fa-microchip"></i> Working</span></div>
      <div class="tally-cell tc-done"><b>${c('done')}</b><span><i class="fa-solid fa-trophy"></i> Done</span></div>`;
-  const board=document.getElementById('board');board.innerHTML='';
+  const board = document.getElementById('board'); board.innerHTML = '';
   SECTIONS.forEach(sec=>{
-    const list=jobs.filter(j=>sectionOf(j)===sec.id&&matches(j));
-    const ico={available:'fa-layer-group',applied:'fa-paper-plane',working:'fa-microchip',done:'fa-trophy'}[sec.id];
-    const col=document.createElement('div');col.className='col '+sec.cls;
-    col.innerHTML=`<div class="col-head"><h2><i class="fa-solid ${ico}"></i> ${sec.label}</h2>
+    const list = jobs.filter(j=>sectionOf(j)===sec.id && gigMatches(j));
+    const ico = {available:'fa-layer-group',applied:'fa-paper-plane',working:'fa-microchip',done:'fa-trophy'}[sec.id];
+    const col = document.createElement('div'); col.className = 'col '+sec.cls;
+    col.innerHTML = `<div class="col-head"><h2><i class="fa-solid ${ico}"></i> ${sec.label}</h2>
       <span class="col-count">${list.length}</span></div><div class="col-body"></div>`;
     board.appendChild(col);
-    const body=col.querySelector('.col-body');
-    if(!list.length){body.innerHTML=`<div class="empty">${query?'No matches.':'Nothing here yet.'}</div>`;return}
-    list.forEach(j=>body.appendChild(cardEl(j)));
+    const body = col.querySelector('.col-body');
+    if(!list.length){body.innerHTML=`<div class="empty">${gigQuery?'No matches.':'Nothing here yet.'}</div>`;return}
+    list.forEach(j=>body.appendChild(gigCardEl(j)));
   });
 }
 
 function renderDeadlines(){
-  const el=document.getElementById('deadlines');
-  const items=jobs.filter(j=>j.deadline&&!['finished','paid','declined'].includes(j.status))
+  const el = document.getElementById('deadlines');
+  const items = jobs.filter(j=>j.deadline&&!['finished','paid','declined'].includes(j.status))
     .map(j=>({j,info:deadlineInfo(j.deadline)})).filter(x=>x.info).sort((a,b)=>a.info.date-b.info.date);
   if(!items.length){
     el.innerHTML=`<div class="strip-head"><i class="fa-solid fa-hourglass-half"></i> Upcoming Deadlines
@@ -574,76 +1181,660 @@ function renderDeadlines(){
   el.innerHTML=`<div class="strip-head"><i class="fa-solid fa-hourglass-half"></i> Upcoming Deadlines
       <span class="dl-count">${items.length}</span></div>
     <div class="dl-track">${items.map(x=>{
-      const t=x.j.job||x.j.platform;const [,fg]=urgColor(x.info.urg);
-      return `<button class="dl-pill" data-open="${x.j.id}">
+      const t=x.j.job||x.j.platform;const[,fg]=urgColor(x.info.urg);
+      return`<button class="dl-pill" data-open="${x.j.id}">
         <span class="dl-when" style="color:${fg}">${esc(x.info.rel)}</span>
         <span class="dl-name">${esc(t)}</span>
         <span class="dl-date">${esc(x.info.label)}</span></button>`;
     }).join('')}</div>`;
 }
 
-const STATUS_ICON={
-  'applied':'fa-paper-plane','verified':'fa-shield-halved','assessment':'fa-flask-vial',
-  'accepted':'fa-handshake','on progress':'fa-spinner','declined':'fa-circle-xmark',
-  'finished':'fa-flag-checkered','paid':'fa-wallet'
-};
-function statusBadge(s){
-  if(!s)return'';const st=STATUS_STYLE[s];if(!st)return'';
-  const ico=STATUS_ICON[s]||'';
-  return `<span class="badge" style="background:${st[0]};color:${st[1]};border-color:${st[2]}">${ico?`<i class="fa-solid ${ico}"></i> `:''}${esc(s)}</span>`;
-}
-
-function cardEl(j){
-  const el=document.createElement('div');el.className='card'+(CLOSED.has(j.status)?' closed':'');
-  const url=tidyUrl(j.url);const title=j.job||j.platform;
-  const eyebrow=(j.job&&j.platform)?`<div class="eyebrow">${esc(j.platform)}</div>`:'';
-  const linkHtml=url?`<a class="link" href="${esc(url)}" target="_blank" rel="noopener">
+function gigCardEl(j){
+  const el = document.createElement('div'); el.className = 'card'+(CLOSED.has(j.status)?' closed':'');
+  const url = tidyUrl(j.url); const title = j.job||j.platform;
+  const eyebrow = (j.job&&j.platform)?`<div class="eyebrow">${esc(j.platform)}</div>`:'';
+  const linkHtml = url?`<a class="link" href="${esc(url)}" target="_blank" rel="noopener">
       <i class="fa-solid fa-up-right-from-square"></i> ${esc(hostOf(j.url))}</a>`:'';
-  const dl=deadlineInfo(j.deadline);
-  const dlBadge=dl?(([bg,fg])=>`<span class="badge badge-dl" style="background:${bg};color:${fg};border-color:${fg}">
+  const dl = deadlineInfo(j.deadline);
+  const dlBadge = dl?(([bg,fg])=>`<span class="badge badge-dl" style="background:${bg};color:${fg};border-color:${fg}">
       <i class="fa-solid fa-clock"></i> ${esc(dl.label)} · ${esc(dl.rel)}</span>`)(urgColor(dl.urg)):'';
-  const chips=[statusBadge(j.status),dlBadge,
+  const chips = [statusBadge(j.status),dlBadge,
     j.pay?`<span class="badge badge-pay"><i class="fa-solid fa-coins"></i> ${esc(j.pay)}</span>`:'',
     j.payment?`<span class="badge badge-method"><i class="fa-solid fa-credit-card"></i> ${esc(j.payment)}</span>`:''].filter(Boolean).join('');
-  const atts=(j.attachments||[]).filter(Boolean);
-  const attHtml=atts.length?`<div class="attach">${atts.map(a=>`
+  const atts = (j.attachments||[]).filter(Boolean);
+  const attHtml = atts.length?`<div class="attach">${atts.map(a=>`
       <a href="${esc(tidyUrl(a))}" target="_blank" rel="noopener" title="${esc(a)}">
         <i class="fa-solid fa-file-arrow-up"></i> ${esc(fileLabel(a))}</a>`).join('')}</div>`:'';
   el.innerHTML=`
     <div class="top"><div>${eyebrow}<div class="name">${esc(title)}</div>${linkHtml}</div>
-      <button class="kebab" data-menu="${j.id}" aria-label="Options">
-        <i class="fa-solid fa-ellipsis-vertical"></i></button></div>
+      <button class="kebab" data-menu="${j.id}" aria-label="Options"><i class="fa-solid fa-ellipsis-vertical"></i></button></div>
     ${chips?`<div class="chips">${chips}</div>`:''}
     ${attHtml}
     ${j.notes?`<div class="notes">${esc(j.notes)}</div>`:''}
     <div class="moves">${movesFor(j)}</div>`;
   return el;
 }
+
 function movesFor(j){
-  const sec=sectionOf(j);
-  const back=to=>`<button class="move" data-move="${j.id}" data-to="${to}">
-     <i class="fa-solid fa-chevron-left"></i></button>`;
-  const fwd=(to,txt)=>`<button class="move fwd" data-move="${j.id}" data-to="${to}">
-     ${txt} <i class="fa-solid fa-chevron-right"></i></button>`;
+  const sec = sectionOf(j);
+  const back = to=>`<button class="move" data-move="${j.id}" data-to="${to}"><i class="fa-solid fa-chevron-left"></i></button>`;
+  const fwd = (to,txt)=>`<button class="move fwd" data-move="${j.id}" data-to="${to}">${txt} <i class="fa-solid fa-chevron-right"></i></button>`;
   if(sec==='available') return fwd('applied','<i class="fa-solid fa-paper-plane"></i> Apply');
   if(sec==='applied')   return back('')+fwd('accepted','<i class="fa-solid fa-rocket"></i> Start');
   if(sec==='working')   return back('applied')+fwd('finished','<i class="fa-solid fa-flag-checkered"></i> Done');
   return back('accepted');
 }
 
-/* ---- interactions ---- */
+/* ================================================================
+   CONTENT STUDIO RENDER
+================================================================ */
+function csBadgeClass(status){
+  const s = (status||'').toLowerCase();
+  if(s==='filming') return 'cs-badge-filming';
+  if(s==='editing') return 'cs-badge-editing';
+  if(s==='ideating'||s==='ideation') return 'cs-badge-ideating';
+  if(s==='posted'||s==='done'||s==='published') return 'cs-badge-posted';
+  if(s==='schedule upload'||s==='scheduled') return 'cs-badge-schedule';
+  return 'cs-badge-default';
+}
+function csBadge(status){
+  if(!status) return '';
+  return `<span class="cs-badge ${csBadgeClass(status)}">${esc(status)}</span>`;
+}
+function platTag(platform){
+  const p = (platform||'').toLowerCase();
+  if(p.includes('youtube')) return 'pc-yt';
+  if(p.includes('instagram')) return 'pc-ig';
+  if(p.includes('tiktok')) return 'pc-tiktok';
+  return 'cs-badge-default';
+}
+function platIcon(platform){
+  const p = (platform||'').toLowerCase();
+  if(p.includes('youtube')) return 'fa-brands fa-youtube';
+  if(p.includes('instagram')) return 'fa-brands fa-instagram';
+  if(p.includes('tiktok')) return 'fa-brands fa-tiktok';
+  return 'fa-solid fa-video';
+}
+function platChips(platformStr){
+  if(!platformStr) return '';
+  return platformStr.split(',').map(p=>p.trim()).filter(Boolean).map(p=>{
+    const ic = platIcon(p);
+    return `<span class="plat-chip"><i class="${ic}"></i> ${esc(p)}</span>`;
+  }).join('');
+}
+
+function fmtProjDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return iso; // fallback for old text-format dates
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+}
+
+function renderCS(){
+  renderCSDeadlines();
+  renderProjects();
+  renderIdeas();
+}
+
+function renderCSDeadlines(){
+  const el = document.getElementById('cs-deadlines');
+  if(!el) return;
+  // collect projects with a scheduledDate that's a parseable future/recent date
+  const now = new Date();
+  const items = projects
+    .filter(p => p.scheduledDate && (p.status||'').toLowerCase() !== 'posted')
+    .map(p => {
+      const d = new Date(p.scheduledDate);
+      if(isNaN(d)) return null;
+      const ms = d - now, hrs = ms / 36e5;
+      let urg = 'later', rel = '';
+      if(ms < 0){urg='overdue';const od=Math.floor(-hrs/24);rel=od>=1?`overdue ${od}d`:'overdue'}
+      else if(hrs < 48){urg='soon';rel=hrs<1?'in <1h':hrs<24?`in ${Math.round(hrs)}h`:'tomorrow'}
+      else{urg='later';rel=`in ${Math.floor(hrs/24)}d`}
+      return {p, d, urg, rel, label:d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})};
+    })
+    .filter(Boolean)
+    .sort((a,b)=>a.d-b.d);
+
+  const head = `<div class="strip-head"><i class="fa-solid fa-calendar-check"></i> Posting Schedule
+    <span class="dl-count" style="background:var(--gray-100);border:1px solid var(--border-light);padding:0 .5rem;font-size:.75rem;color:var(--slate-700);font-weight:600;margin-left:.25rem">${items.length}</span></div>`;
+
+  if(!items.length){
+    el.innerHTML = head + `<div class="cs-dl-empty"><i class="fa-solid fa-calendar-days"></i> No upcoming posts — add a Scheduled Date to a project to see it here.</div>`;
+    return;
+  }
+  const pills = items.map(x=>{
+    const [bg,fg] = x.urg==='overdue'?['var(--error-light)','var(--error-red)']
+                  : x.urg==='soon'?['var(--warning-light)','var(--warning-orange)']
+                  : ['var(--info-light)','var(--info-blue)'];
+    const pIcon = platIcon(x.p.platform);
+    return `<div class="cs-dl-pill" data-proj-dl="${esc(x.p.id)}">
+      <span class="dl-plat" style="color:${fg}"><i class="${pIcon}"></i> ${esc(x.p.platform||'—')}</span>
+      <span class="dl-when" style="color:${fg}">${esc(x.rel)}</span>
+      <span class="dl-name">${esc(x.p.title)}</span>
+      <span class="dl-date">${esc(x.label)}</span>
+    </div>`;
+  }).join('');
+  el.innerHTML = head + `<div class="cs-dl-track">${pills}</div>`;
+}
+
+// clicking a posting deadline pill opens the project modal
+document.addEventListener('click', e=>{
+  const pill = e.target.closest('[data-proj-dl]');
+  if(pill) openProjModal(pill.dataset.projDl);
+});
+
+function renderProjects(){
+  const filter = projFilter;
+  let list = projects.slice();
+  if(filter === 'in-progress') list = list.filter(p=>!PROJ_STATUS_DONE.has((p.status||'').toLowerCase()));
+  else if(filter === 'completed') list = list.filter(p=>PROJ_STATUS_DONE.has((p.status||'').toLowerCase()));
+
+  document.getElementById('proj-count').textContent = list.length;
+  const container = document.getElementById('proj-cards');
+  if(!list.length){
+    container.innerHTML=`<div class="cs-empty"><i class="fa-solid fa-film"></i><span>No projects here yet.</span></div>`;
+    return;
+  }
+  container.innerHTML = list.map(p=>`
+    <div class="proj-card" data-proj-id="${esc(p.id)}">
+      <div class="proj-card-top">
+        <span class="pc-platform ${platTag(p.platform)}"><i class="${platIcon(p.platform)}"></i> ${esc(p.platform||'—')}</span>
+        <span class="pc-title">${esc(p.title)}</span>
+        <button class="proj-kebab" data-proj-menu="${esc(p.id)}" aria-label="Options"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      </div>
+      <div class="proj-card-meta">
+        ${csBadge(p.status)}
+        ${p.form?`<span class="cs-badge cs-badge-default"><i class="fa-solid fa-photo-film"></i> ${esc(p.form)}</span>`:''}
+        ${p.scheduledDate?`<span class="cs-badge cs-badge-default"><i class="fa-solid fa-calendar"></i> ${esc(fmtProjDate(p.scheduledDate))}</span>`:''}
+      </div>
+      ${p.desc?`<div class="proj-card-desc">${esc(p.desc)}</div>`:''}
+    </div>`).join('');
+}
+
+function renderIdeas(){
+  const q = ideaQuery.toLowerCase();
+  let list = ideas.slice();
+  if(ideaFilter === 'ideas') list = list.filter(i=>!i.posted && (i.status||'').toLowerCase()!=='posted');
+  else if(ideaFilter === 'posted') list = list.filter(i=>i.posted||(i.status||'').toLowerCase()==='posted');
+  if(q) list = list.filter(i=>[i.idea,i.platform,i.form,i.status].some(v=>(v||'').toLowerCase().includes(q)));
+
+  document.getElementById('ideas-count').textContent = list.length;
+  const tbody = document.getElementById('ideas-tbody');
+  if(!list.length){
+    tbody.innerHTML=`<tr><td colspan="5"><div class="cs-empty"><i class="fa-solid fa-lightbulb"></i><span>No ideas found.</span></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(i=>`
+    <tr data-idea-id="${esc(i.id)}">
+      <td class="td-idea">${esc(i.idea)}</td>
+      <td class="td-platform"><div>${platChips(i.platform)}</div></td>
+      <td class="td-form">${esc(i.form||'—')}</td>
+      <td>${csBadge(i.status)}</td>
+      <td class="td-actions">
+        <button class="btn btn-ghost btn-sm" data-idea-edit="${esc(i.id)}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="btn btn-danger btn-sm" data-idea-del="${esc(i.id)}" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+function setProjFilter(f, el){
+  projFilter = f;
+  document.querySelectorAll('[data-proj-filter]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderProjects();
+}
+function setIdeaFilter(f, el){
+  ideaFilter = f;
+  document.querySelectorAll('[data-idea-filter]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderIdeas();
+}
+
+/* ================================================================
+   IDEA BANK
+================================================================ */
+const BANK_CATEGORIES = ['daily life','fashion','travel','food','room decor','tech','vlog','other'];
+
+function getBankPlatClass(platform){
+  const p=(platform||'').toLowerCase();
+  if(p==='instagram') return 'bc-instagram';
+  if(p==='tiktok') return 'bc-tiktok';
+  if(p==='youtube') return 'bc-youtube';
+  return 'bc-other';
+}
+function getBankPlatBadgeClass(platform){
+  const p=(platform||'').toLowerCase();
+  if(p==='instagram') return 'bc-plat-ig';
+  if(p==='tiktok') return 'bc-plat-tt';
+  if(p==='youtube') return 'bc-plat-yt';
+  return 'cs-badge-default';
+}
+function getBankPlatIcon(platform){
+  const p=(platform||'').toLowerCase();
+  if(p==='instagram') return 'fa-brands fa-instagram';
+  if(p==='tiktok') return 'fa-brands fa-tiktok';
+  if(p==='youtube') return 'fa-brands fa-youtube';
+  return 'fa-solid fa-video';
+}
+
+/* Extract a usable embed / thumbnail from a posted URL */
+function parseInspoUrl(url){
+  if(!url) return {type:'none'};
+  // YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/);
+  if(ytMatch) return {type:'youtube', id:ytMatch[1]};
+  // TikTok — no embeddable preview without oEmbed; show thumbnail placeholder
+  if(/tiktok\.com/.test(url)) return {type:'tiktok', url};
+  // Instagram — no embeddable preview; show placeholder
+  if(/instagram\.com/.test(url)) return {type:'instagram', url};
+  return {type:'link', url};
+}
+
+function buildThumbHtml(item){
+  const parsed = parseInspoUrl(item.url);
+  const thumbSrc = item.thumbnail || '';
+
+  // --- YouTube: always has a thumbnail via img.youtube.com ---
+  if(parsed.type==='youtube'){
+    const ytThumb = thumbSrc || `https://img.youtube.com/vi/${parsed.id}/hqdefault.jpg`;
+    return `<div class="bc-thumb">
+      <img src="${ytThumb}" alt="" loading="lazy">
+      <a class="bc-play-overlay" href="${esc(item.url)}" target="_blank" rel="noopener">
+        <i class="fa-brands fa-youtube"></i>
+      </a>
+    </div>`;
+  }
+
+  // --- TikTok/Instagram: use fetched thumbnail if available, else branded bg ---
+  if(parsed.type==='tiktok'){
+    if(thumbSrc){
+      return `<div class="bc-thumb">
+        <img src="${thumbSrc}" alt="" loading="lazy" onerror="this.parentElement.classList.add('bc-thumb-fallback-tt')">
+        <a class="bc-play-overlay" href="${esc(item.url)}" target="_blank" rel="noopener">
+          <i class="fa-brands fa-tiktok"></i>
+        </a>
+      </div>`;
+    }
+    return `<div class="bc-thumb" style="background:linear-gradient(160deg,#010101 0%,#1a1a2e 55%,#0f3460 100%)">
+      <div class="bc-no-preview" style="color:rgba(255,255,255,.8)">
+        <i class="fa-brands fa-tiktok" style="color:#69C9D0"></i>
+        <span>tap to open</span>
+      </div>
+      <a class="bc-play-overlay" href="${esc(item.url)}" target="_blank" rel="noopener" style="background:transparent">
+        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:1rem;opacity:.6"></i>
+      </a>
+    </div>`;
+  }
+
+  if(parsed.type==='instagram'){
+    if(thumbSrc){
+      return `<div class="bc-thumb">
+        <img src="${thumbSrc}" alt="" loading="lazy" onerror="this.parentElement.classList.add('bc-thumb-fallback-ig')">
+        <a class="bc-play-overlay" href="${esc(item.url)}" target="_blank" rel="noopener">
+          <i class="fa-brands fa-instagram"></i>
+        </a>
+      </div>`;
+    }
+    return `<div class="bc-thumb" style="background:linear-gradient(160deg,#833AB4 0%,#FD1D1D 50%,#FCB045 100%)">
+      <div class="bc-no-preview" style="color:rgba(255,255,255,.9)">
+        <i class="fa-brands fa-instagram"></i>
+        <span>tap to open</span>
+      </div>
+      <a class="bc-play-overlay" href="${esc(item.url)}" target="_blank" rel="noopener" style="background:transparent">
+        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:1rem;color:#fff;opacity:.6"></i>
+      </a>
+    </div>`;
+  }
+
+  return `<div class="bc-thumb">
+    <div class="bc-no-preview" style="color:var(--gray-400)">
+      <i class="fa-solid fa-link" style="opacity:.4"></i><span>No preview</span>
+    </div>
+  </div>`;
+}
+
+function renderBank(){
+  const q = (document.getElementById('bank-search')?.value||'').toLowerCase();
+  const cat = document.getElementById('bank-cat-filter')?.value||'';
+  let list = ideaBank.slice();
+  if(bankPlatFilter !== 'all') list = list.filter(b=>(b.platform||'').toLowerCase()===bankPlatFilter);
+  if(cat) list = list.filter(b=>(b.category||'').toLowerCase()===cat.toLowerCase());
+  if(q) list = list.filter(b=>[b.title,b.note,b.platform,b.category,b.url].some(v=>(v||'').toLowerCase().includes(q)));
+
+  const grid = document.getElementById('bank-grid');
+  if(!list.length){
+    grid.innerHTML=`<div class="bank-empty">
+      <i class="fa-solid fa-bookmark"></i>
+      <p>${ideaBank.length?'No inspo matches your filters.':'Paste a TikTok, Instagram, or YouTube link to save your first inspo.'}</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = list.map(item=>`
+    <div class="bank-card ${getBankPlatClass(item.platform)}">
+      <div class="bc-stripe"></div>
+      ${buildThumbHtml(item)}
+      <div class="bc-body">
+        ${item.title?`<div class="bc-title">${esc(item.title)}</div>`:''}
+        <div class="bc-meta">
+          <span class="bc-plat-badge ${getBankPlatBadgeClass(item.platform)}">
+            <i class="${getBankPlatIcon(item.platform)}"></i> ${esc(item.platform||'—')}
+          </span>
+          ${item.category?`<span class="bc-cat-badge"><i class="fa-solid fa-tag"></i> ${esc(item.category)}</span>`:''}
+        </div>
+        ${item.note?`<div class="bc-note">${esc(item.note)}</div>`:''}
+      </div>
+      <div class="bc-footer">
+        ${item.url?`<a class="bc-link" href="${esc(item.url)}" target="_blank" rel="noopener">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> ${esc(shortUrl(item.url))}</a>`:'<span class="bc-link" style="color:var(--gray-400)">No link</span>'}
+        <div class="bc-actions">
+          <button class="bc-btn" data-bank-edit="${esc(item.id)}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+          <button class="bc-btn del" data-bank-del="${esc(item.id)}" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function shortUrl(u){
+  try{const x=new URL(u);return x.host.replace(/^www\./,'')+x.pathname.slice(0,24)+(x.pathname.length>24?'…':'')}
+  catch(e){return(u||'').slice(0,30)}
+}
+
+function setBankFilter(plat, el){
+  bankPlatFilter = plat;
+  document.querySelectorAll('[data-bank-plat]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderBank();
+}
+
+/* Fetch thumbnail via oEmbed APIs.
+   - YouTube: direct img.youtube.com (no API key needed)
+   - TikTok: https://www.tiktok.com/oembed?url=…  (returns thumbnail_url)
+   - Instagram: https://graph.facebook.com/v18.0/instagram_oembed?url=…
+     IG oEmbed now requires an access token — so we fall back gracefully.
+*/
+async function fetchOembedThumb(url, platform){
+  try{
+    if(platform==='youtube'){
+      const m = url.match(/(?:v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{11})/);
+      if(m) return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
+    }
+    if(platform==='tiktok'){
+      const r = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
+      if(r.ok){ const d=await r.json(); return d.thumbnail_url||''; }
+    }
+    // Instagram oEmbed requires a token — skip silently, show gradient fallback
+  }catch(e){ /* network error — use fallback */ }
+  return '';
+}
+
+function openBankModal(id){
+  const item = id ? ideaBank.find(x=>x.id===id) : null;
+  const it = item||{url:'',title:'',platform:'',category:'',note:''};
+  document.getElementById('bankModalTitle').textContent = item ? 'Edit Inspo' : 'Add Inspo';
+  const platOpts = ['','instagram','tiktok','youtube'].map(o=>
+    `<option value="${esc(o)}" ${o===it.platform?'selected':''}>${o||'— detect from URL —'}</option>`).join('');
+  const catOpts = ['', ...BANK_CATEGORIES].map(o=>
+    `<option value="${esc(o)}" ${o===it.category?'selected':''}>${o||'— no category —'}</option>`).join('');
+  document.getElementById('bankModalBody').innerHTML=`
+    <div class="form-group"><label><i class="fa-solid fa-link"></i> Video / Post URL</label>
+      <input type="url" id="bk-url" value="${esc(it.url)}" placeholder="https://www.tiktok.com/@…">
+      <span class="form-hint">YouTube and TikTok thumbnails are fetched automatically on save. Instagram shows a gradient placeholder (their API requires a login token).</span></div>
+    <div class="form-group"><label><i class="fa-solid fa-heading"></i> Title <span class="opt">(opt.)</span></label>
+      <input type="text" id="bk-title" value="${esc(it.title||'')}" placeholder="e.g. POV: solo date in Jakarta"></div>
+    <div class="row2">
+      <div class="form-group"><label><i class="fa-solid fa-share-nodes"></i> Platform <span class="opt">(opt.)</span></label>
+        <select id="bk-platform">${platOpts}</select></div>
+      <div class="form-group"><label><i class="fa-solid fa-tag"></i> Category <span class="opt">(opt.)</span></label>
+        <select id="bk-cat">${catOpts}</select></div>
+    </div>
+    <div class="form-group"><label><i class="fa-solid fa-note-sticky"></i> Note <span class="opt">(opt.)</span></label>
+      <textarea id="bk-note" placeholder="What caught your eye? Style, idea, format…">${esc(it.note)}</textarea></div>`;
+  showBankModal(true);
+  document.getElementById('bk-url').focus();
+
+  // auto-detect platform from URL
+  document.getElementById('bk-url').addEventListener('blur', ()=>{
+    const u = document.getElementById('bk-url').value;
+    const sel = document.getElementById('bk-platform');
+    if(sel.value) return; // don't override if manually set
+    if(/tiktok\.com/.test(u)) sel.value='tiktok';
+    else if(/instagram\.com/.test(u)) sel.value='instagram';
+    else if(/youtube\.com|youtu\.be/.test(u)) sel.value='youtube';
+  });
+
+  document.getElementById('bank-save').onclick = async ()=>{
+    const url = document.getElementById('bk-url').value.trim();
+    if(!url){document.getElementById('bk-url').focus();return;}
+    let platform = document.getElementById('bk-platform').value;
+    if(!platform){
+      if(/tiktok\.com/.test(url)) platform='tiktok';
+      else if(/instagram\.com/.test(url)) platform='instagram';
+      else if(/youtube\.com|youtu\.be/.test(url)) platform='youtube';
+    }
+
+    // Show a saving state
+    const saveBtn = document.getElementById('bank-save');
+    const origHtml = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+    saveBtn.disabled = true;
+
+    // Fetch thumbnail if not already stored
+    let thumbnail = item?.thumbnail || '';
+    if(!thumbnail || document.getElementById('bk-url').value.trim() !== (item?.url||'')){
+      thumbnail = await fetchOembedThumb(url, platform);
+    }
+
+    saveBtn.innerHTML = origHtml;
+    saveBtn.disabled = false;
+
+    const data={
+      url,
+      title: document.getElementById('bk-title').value.trim(),
+      platform,
+      category: document.getElementById('bk-cat').value,
+      note: document.getElementById('bk-note').value.trim(),
+      thumbnail,
+    };
+    if(item){Object.assign(item,data)}else{ideaBank.unshift({id:'b_'+Date.now(),...data})}
+    saveCS(); renderBank(); showBankModal(false);
+  };
+}
+function showBankModal(on){document.getElementById('bankModal').classList.toggle('active',on)}
+document.getElementById('bankModalClose').onclick = ()=>showBankModal(false);
+document.getElementById('bank-cancel').onclick = ()=>showBankModal(false);
+document.getElementById('bankModal').addEventListener('click',e=>{if(e.target.id==='bankModal')showBankModal(false)});
+
+document.getElementById('addBankBtn').onclick = ()=>openBankModal(null);
+document.getElementById('bank-search').addEventListener('input', renderBank);
+
+document.getElementById('bank-grid').addEventListener('click',e=>{
+  const editBtn = e.target.closest('[data-bank-edit]');
+  if(editBtn){openBankModal(editBtn.dataset.bankEdit);return}
+  const delBtn = e.target.closest('[data-bank-del]');
+  if(delBtn){
+    if(confirm('Remove this inspo?')){ideaBank=ideaBank.filter(b=>b.id!==delBtn.dataset.bankDel);saveCS();renderBank()}
+  }
+});
+
+/* ================================================================
+   CONTENT STUDIO MODALS
+================================================================ */
+const PROJ_STATUS_OPTIONS = ['filming','editing','ideation','schedule upload','posted','done'];
+const PROJ_PLATFORM_OPTIONS = ['youtube','instagram','tiktok','instagram & tiktok'];
+
+function openProjModal(id){
+  const p = id ? projects.find(x=>x.id===id) : null;
+  const pj = p||{platform:'youtube',title:'',form:'',scheduledDate:'',desc:'',status:''};
+  document.getElementById('projModalTitle').textContent = p ? 'Edit Project' : 'Add Project';
+  const platOpts = PROJ_PLATFORM_OPTIONS.map(o=>`<option value="${esc(o)}" ${o===pj.platform?'selected':''}>${o}</option>`).join('');
+  const statOpts = PROJ_STATUS_OPTIONS.map(o=>`<option value="${esc(o)}" ${o===pj.status?'selected':''}>${o}</option>`).join('');
+  document.getElementById('projModalBody').innerHTML = `
+    <div class="form-group"><label><i class="fa-solid fa-video"></i> Platform</label>
+      <select id="pf-platform">${platOpts}</select></div>
+    <div class="form-group"><label><i class="fa-solid fa-heading"></i> Title</label>
+      <input type="text" id="pf-title" value="${esc(pj.title)}" placeholder="Content title…"></div>
+    <div class="row2">
+      <div class="form-group"><label><i class="fa-solid fa-photo-film"></i> Form <span class="opt">(opt.)</span></label>
+        <input type="text" id="pf-form" value="${esc(pj.form)}" placeholder="e.g. youtube videos"></div>
+      <div class="form-group"><label><i class="fa-solid fa-list-check"></i> Status</label>
+        <select id="pf-status">${statOpts}</select></div>
+    </div>
+    <div class="form-group"><label><i class="fa-solid fa-calendar-days"></i> Scheduled Date <span class="opt">(opt.)</span></label>
+      <input type="datetime-local" id="pf-date" value="${esc(pj.scheduledDate||'')}">
+      <span class="form-hint">Sets a posting deadline visible in the Posting Schedule strip.</span></div>
+    <div class="form-group"><label><i class="fa-solid fa-align-left"></i> Description <span class="opt">(opt.)</span></label>
+      <textarea id="pf-desc">${esc(pj.desc)}</textarea></div>`;
+  showProjModal(true);
+  document.getElementById('pf-title').focus();
+  document.getElementById('proj-save').onclick = ()=>{
+    const title = document.getElementById('pf-title').value.trim();
+    if(!title){document.getElementById('pf-title').focus();return;}
+    const data = {
+      platform: document.getElementById('pf-platform').value,
+      title,
+      form: document.getElementById('pf-form').value.trim(),
+      status: document.getElementById('pf-status').value,
+      scheduledDate: document.getElementById('pf-date').value,
+      desc: document.getElementById('pf-desc').value.trim(),
+    };
+    if(p){Object.assign(p,data)}else{projects.unshift({id:'p_'+Date.now(),...data})}
+    saveCS(); renderProjects(); showProjModal(false);
+  };
+}
+
+function showProjModal(on){document.getElementById('projModal').classList.toggle('active',on)}
+document.getElementById('projModalClose').onclick = ()=>showProjModal(false);
+document.getElementById('proj-cancel').onclick = ()=>showProjModal(false);
+document.getElementById('projModal').addEventListener('click',e=>{if(e.target.id==='projModal')showProjModal(false)});
+
+const IDEA_PLATFORMS = [
+  {value:'instagram', label:'Instagram', icon:'fa-brands fa-instagram'},
+  {value:'tiktok',   label:'TikTok',    icon:'fa-brands fa-tiktok'},
+  {value:'youtube',  label:'YouTube',   icon:'fa-brands fa-youtube'},
+];
+const IDEA_FORMS = [
+  {value:'short videos',   label:'Short Video',  icon:'fa-solid fa-film'},
+  {value:'youtube video',  label:'YouTube Video',icon:'fa-brands fa-youtube'},
+  {value:'carousel',       label:'Carousel',     icon:'fa-solid fa-images'},
+  {value:'photo',          label:'Photo',        icon:'fa-solid fa-camera'},
+  {value:'story',          label:'Story',        icon:'fa-solid fa-circle-play'},
+];
+
+function buildCheckPills(containerId, options, currentValue){
+  const current = (currentValue||'').toLowerCase().split(',').map(s=>s.trim()).filter(Boolean);
+  return `<div class="check-group" id="${containerId}">${options.map(o=>`
+    <button type="button" class="check-pill${current.includes(o.value)?' selected':''}" data-val="${esc(o.value)}">
+      <i class="${o.icon}"></i> ${o.label}
+    </button>`).join('')}</div>`;
+}
+
+function initCheckPills(containerId){
+  document.getElementById(containerId).addEventListener('click',e=>{
+    const pill = e.target.closest('.check-pill'); if(!pill) return;
+    pill.classList.toggle('selected');
+  });
+}
+
+function getCheckValues(containerId){
+  return Array.from(document.querySelectorAll(`#${containerId} .check-pill.selected`))
+    .map(p=>p.dataset.val).join(', ');
+}
+
+function openIdeaModal(id){
+  const idea = id ? ideas.find(x=>x.id===id) : null;
+  const ij = idea||{idea:'',platform:'',form:'',status:'',posted:false};
+  document.getElementById('ideaModalTitle').textContent = idea ? 'Edit Idea' : 'Add Idea';
+  const statOpts = ['','ideating','filming','editing','schedule upload','posted'].map(o=>
+    `<option value="${esc(o)}" ${o===ij.status?'selected':''}>${o||'— none —'}</option>`).join('');
+  document.getElementById('ideaModalBody').innerHTML = `
+    <div class="form-group"><label><i class="fa-solid fa-lightbulb"></i> Idea</label>
+      <input type="text" id="if-idea" value="${esc(ij.idea)}" placeholder="Your content idea…"></div>
+    <div class="form-group"><label><i class="fa-solid fa-share-nodes"></i> Platform <span class="opt">(opt.)</span></label>
+      ${buildCheckPills('if-platform-pills', IDEA_PLATFORMS, ij.platform)}</div>
+    <div class="form-group"><label><i class="fa-solid fa-photo-film"></i> Form <span class="opt">(opt.)</span></label>
+      ${buildCheckPills('if-form-pills', IDEA_FORMS, ij.form)}</div>
+    <div class="form-group"><label><i class="fa-solid fa-list-check"></i> Status</label>
+      <select id="if-status">${statOpts}</select></div>
+    <div class="form-group" style="flex-direction:row;align-items:center;gap:.625rem">
+      <input type="checkbox" id="if-posted" style="width:auto;padding:0" ${ij.posted?'checked':''}>
+      <label for="if-posted" style="margin:0;text-transform:none;letter-spacing:0;font-size:.85rem">Mark as posted</label>
+    </div>`;
+  initCheckPills('if-platform-pills');
+  initCheckPills('if-form-pills');
+  showIdeaModal(true);
+  document.getElementById('if-idea').focus();
+  document.getElementById('idea-save').onclick = ()=>{
+    const ideaText = document.getElementById('if-idea').value.trim();
+    if(!ideaText){document.getElementById('if-idea').focus();return;}
+    const data = {
+      idea: ideaText,
+      platform: getCheckValues('if-platform-pills'),
+      form: getCheckValues('if-form-pills'),
+      status: document.getElementById('if-status').value,
+      posted: document.getElementById('if-posted').checked,
+    };
+    if(idea){Object.assign(idea,data)}else{ideas.unshift({id:'i_'+Date.now(),...data})}
+    saveCS(); renderIdeas(); showIdeaModal(false);
+  };
+}
+
+function showIdeaModal(on){document.getElementById('ideaModal').classList.toggle('active',on)}
+document.getElementById('ideaModalClose').onclick = ()=>showIdeaModal(false);
+document.getElementById('idea-cancel').onclick = ()=>showIdeaModal(false);
+document.getElementById('ideaModal').addEventListener('click',e=>{if(e.target.id==='ideaModal')showIdeaModal(false)});
+
+/* ================================================================
+   CS INTERACTIONS
+================================================================ */
+document.getElementById('addProjBtn').onclick = ()=>openProjModal(null);
+document.getElementById('addIdeaBtn').onclick = ()=>openIdeaModal(null);
+document.getElementById('idea-search').addEventListener('input',e=>{ideaQuery=e.target.value;renderIdeas()});
+
+document.getElementById('proj-cards').addEventListener('click',e=>{
+  const km = e.target.closest('[data-proj-menu]');
+  if(km){
+    const id = km.dataset.projMenu;
+    if(openMenu){openMenu.remove();openMenu=null}
+    const m = document.createElement('div'); m.className='ctx-menu';
+    m.style.cssText='top:100%;right:0;left:auto';
+    m.innerHTML=`<button data-pact="edit"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+      <button class="del" data-pact="del"><i class="fa-solid fa-trash-can"></i> Delete</button>`;
+    km.appendChild(m); openMenu=m;
+    m.addEventListener('click',ev=>{
+      const b=ev.target.closest('button');if(!b)return;
+      if(b.dataset.pact==='edit')openProjModal(id);
+      if(b.dataset.pact==='del'){if(confirm('Delete this project?')){projects=projects.filter(p=>p.id!==id);saveCS();renderProjects()}}
+      if(openMenu){openMenu.remove();openMenu=null}
+    });
+  }
+});
+
+document.getElementById('ideas-table').addEventListener('click',e=>{
+  const editBtn = e.target.closest('[data-idea-edit]');
+  if(editBtn){openIdeaModal(editBtn.dataset.ideaEdit);return}
+  const delBtn = e.target.closest('[data-idea-del]');
+  if(delBtn){
+    if(confirm('Delete this idea?')){ideas=ideas.filter(i=>i.id!==delBtn.dataset.ideaDel);saveCS();renderIdeas()}
+  }
+});
+
+/* ================================================================
+   GIG TRACKER INTERACTIONS
+================================================================ */
 document.getElementById('board').addEventListener('click',e=>{
-  const mv=e.target.closest('[data-move]');if(mv){setStatus(mv.dataset.move,mv.dataset.to);return}
-  const kb=e.target.closest('[data-menu]');if(kb){toggleMenu(kb,kb.dataset.menu);return}
+  const mv = e.target.closest('[data-move]'); if(mv){setGigStatus(mv.dataset.move,mv.dataset.to);return}
+  const kb = e.target.closest('[data-menu]'); if(kb){toggleGigMenu(kb,kb.dataset.menu);return}
 });
 document.getElementById('deadlines').addEventListener('click',e=>{
-  const p=e.target.closest('[data-open]');if(p)openModal(p.dataset.open);
+  const p = e.target.closest('[data-open]'); if(p) openGigModal(p.dataset.open);
 });
 document.addEventListener('click',e=>{
-  if(openMenu&&!e.target.closest('.ctx-menu')&&!e.target.closest('[data-menu]')){openMenu.remove();openMenu=null}
+  if(openMenu&&!e.target.closest('.ctx-menu')&&!e.target.closest('[data-menu]')&&!e.target.closest('[data-proj-menu]')){
+    openMenu.remove();openMenu=null}
 });
-function setStatus(id,status){const j=jobs.find(x=>x.id===id);if(!j)return;j.status=status;save();render()}
-function toggleMenu(anchor,id){
+function setGigStatus(id,status){const j=jobs.find(x=>x.id===id);if(!j)return;j.status=status;saveGigs();renderGigs()}
+function toggleGigMenu(anchor,id){
   if(openMenu){openMenu.remove();openMenu=null}
   const card=anchor.closest('.card');const m=document.createElement('div');m.className='ctx-menu';
   m.innerHTML=`<button data-act="edit"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
@@ -651,20 +1842,22 @@ function toggleMenu(anchor,id){
   card.appendChild(m);openMenu=m;
   m.addEventListener('click',ev=>{
     const b=ev.target.closest('button');if(!b)return;
-    if(b.dataset.act==='edit')openModal(id);
-    if(b.dataset.act==='del'){if(confirm('Delete this gig?')){jobs=jobs.filter(x=>x.id!==id);save();render()}}
+    if(b.dataset.act==='edit')openGigModal(id);
+    if(b.dataset.act==='del'){if(confirm('Delete this gig?')){jobs=jobs.filter(x=>x.id!==id);saveGigs();renderGigs()}}
     if(openMenu){openMenu.remove();openMenu=null}
   });
 }
 
-/* ---- modal ---- */
-function openModal(id){
-  const editing=jobs.find(x=>x.id===id);
-  const j=editing||{platform:'',job:'',url:'',pay:'',payment:'',status:'',notes:'',attachments:[],deadline:''};
-  document.getElementById('modalTitle').textContent=editing?'Edit Gig':'Add Gig';
-  const statusOpts=STATUS_OPTIONS.map(s=>`<option value="${esc(s)}" ${s===j.status?'selected':''}>${s||'— none (Available) —'}</option>`).join('');
-  const payList=PAYMENT_SUGGEST.map(p=>`<option value="${esc(p)}">`).join('');
-  const body=document.getElementById('modalBody');
+/* ================================================================
+   GIG MODAL
+================================================================ */
+function openGigModal(id){
+  const editing = jobs.find(x=>x.id===id);
+  const j = editing||{platform:'',job:'',url:'',pay:'',payment:'',status:'',notes:'',attachments:[],deadline:''};
+  document.getElementById('gigModalTitle').textContent = editing?'Edit Gig':'Add Gig';
+  const statusOpts = STATUS_OPTIONS.map(s=>`<option value="${esc(s)}" ${s===j.status?'selected':''}>${s||'— none (Available) —'}</option>`).join('');
+  const payList = PAYMENT_SUGGEST.map(p=>`<option value="${esc(p)}">`).join('');
+  const body = document.getElementById('gigModalBody');
   body.innerHTML=`
     <div class="form-group"><label><i class="fa-solid fa-building"></i> Platform Name</label>
       <input type="text" id="f-platform" value="${esc(j.platform)}" placeholder="e.g. Outlier AI"></div>
@@ -680,21 +1873,21 @@ function openModal(id){
         <datalist id="pay-methods">${payList}</datalist></div>
     </div>
     <div class="form-group"><label><i class="fa-solid fa-list-check"></i> Status</label><select id="f-status">${statusOpts}</select>
-      <span class="form-hint">Status drives column placement: applied/verified/assessment/declined → Applied · accepted/on progress → Working On · finished/paid → Done / Paid.</span></div>
+      <span class="form-hint">applied/verified/assessment/declined → Applied · accepted/on progress → Working On · finished/paid → Done.</span></div>
     <div class="form-group"><label><i class="fa-solid fa-calendar-days"></i> Deadline <span class="opt">(optional)</span></label>
       <input type="datetime-local" id="f-deadline" value="${esc(j.deadline||'')}">
-      <span class="form-hint">Gigs with a deadline show in the Upcoming Deadlines strip, soonest first.</span></div>
+      <span class="form-hint">Gigs with a deadline appear in the Upcoming Deadlines strip.</span></div>
     <div class="form-group"><label><i class="fa-solid fa-file-arrow-up"></i> Attachments <span class="opt">(one link per line)</span></label>
-      <textarea id="f-attach" placeholder="https://drive.google.com/…&#10;https://…/resume.pdf">${esc((j.attachments||[]).join('\n'))}</textarea></div>
+      <textarea id="f-attach" placeholder="https://drive.google.com/…">${esc((j.attachments||[]).join('\n'))}</textarea></div>
     <div class="form-group"><label><i class="fa-solid fa-note-sticky"></i> Notes <span class="opt">(optional)</span></label>
       <textarea id="f-notes" placeholder="Deadlines, task type, contacts…">${esc(j.notes)}</textarea></div>`;
-  showModal(true);
+  showGigModal(true);
   body.querySelector('#f-platform').focus();
-  document.getElementById('m-save').onclick=()=>{
-    const platform=body.querySelector('#f-platform').value.trim();
-    const job=body.querySelector('#f-job').value.trim();
+  document.getElementById('gig-save').onclick = ()=>{
+    const platform = body.querySelector('#f-platform').value.trim();
+    const job = body.querySelector('#f-job').value.trim();
     if(!platform&&!job){body.querySelector('#f-platform').focus();return}
-    const data={platform,job,url:body.querySelector('#f-url').value.trim(),
+    const data = {platform,job,url:body.querySelector('#f-url').value.trim(),
       pay:body.querySelector('#f-pay').value.trim(),
       payment:body.querySelector('#f-payment').value.trim(),
       status:body.querySelector('#f-status').value,
@@ -702,24 +1895,26 @@ function openModal(id){
       attachments:body.querySelector('#f-attach').value.split('\n').map(s=>s.trim()).filter(Boolean),
       notes:body.querySelector('#f-notes').value.trim()};
     if(editing){Object.assign(editing,data)}else{jobs.unshift({id:'j_'+Date.now(),added:Date.now(),...data})}
-    save();render();showModal(false);
+    saveGigs();renderGigs();showGigModal(false);
   };
 }
-function showModal(on){document.getElementById('modal').classList.toggle('active',on)}
-document.getElementById('modalClose').onclick=()=>showModal(false);
-document.getElementById('m-cancel').onclick=()=>showModal(false);
-document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')showModal(false)});
+function showGigModal(on){document.getElementById('gigModal').classList.toggle('active',on)}
+document.getElementById('gigModalClose').onclick = ()=>showGigModal(false);
+document.getElementById('gig-cancel').onclick = ()=>showGigModal(false);
+document.getElementById('gigModal').addEventListener('click',e=>{if(e.target.id==='gigModal')showGigModal(false)});
 
-/* ---- toolbar ---- */
-document.getElementById('addFab').onclick=()=>openModal(null);
-document.getElementById('search').addEventListener('input',e=>{query=e.target.value;render()});
-document.getElementById('exportBtn').onclick=()=>{
-  const blob=new Blob([JSON.stringify(jobs,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+/* ================================================================
+   TOOLBAR
+================================================================ */
+document.getElementById('addFab').onclick = ()=>openGigModal(null);
+document.getElementById('search').addEventListener('input',e=>{gigQuery=e.target.value;renderGigs()});
+document.getElementById('exportBtn').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(jobs,null,2)],{type:'application/json'});
+  const a = document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='sidegig-tracker-'+new Date().toISOString().slice(0,10)+'.json';a.click();
   URL.revokeObjectURL(a.href);flash('Exported');
 };
-document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+document.getElementById('importBtn').onclick = ()=>document.getElementById('importFile').click();
 document.getElementById('importFile').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{
@@ -738,60 +1933,71 @@ document.getElementById('importFile').addEventListener('change',e=>{
       const dupes=clean.length-fresh.length;
       if(!fresh.length){alert(`All ${clean.length} jobs already present.`);return}
       const msg=`Add ${fresh.length} new job${fresh.length>1?'s':''}?`+(dupes?` (${dupes} already present, skipped)`:' ');
-      if(confirm(msg)){jobs=fresh.concat(jobs);save();render();flash(`Added ${fresh.length}`)}
+      if(confirm(msg)){jobs=fresh.concat(jobs);saveGigs();renderGigs();flash(`Added ${fresh.length}`)}
     }catch(err){alert("That file didn't look like a valid tracker export.")}
   };r.readAsText(f);e.target.value='';
 });
-document.getElementById('resetBtn').onclick=()=>{
+document.getElementById('resetBtn').onclick = ()=>{
   if(confirm('Reset to the original 21 platforms? Current changes will be lost.')){
-    jobs=SEED.slice();save();render()}};
+    jobs=GIG_SEED.slice();saveGigs();renderGigs()}};
 
-/* ---- password gate + boot ---- */
+/* ================================================================
+   LOCK
+================================================================ */
+document.getElementById('lockBtn').onclick = ()=>{
+  localStorage.removeItem(HASH_KEY);
+  jobs=[];projects=[];ideas=[];passHash=null;
+  showApp(false);
+  document.getElementById('g-pass').value='';
+};
+
+/* ================================================================
+   AUTH + BOOT
+================================================================ */
 function showApp(on){
-  document.getElementById('gate').style.display=on?'none':'flex';
-  document.getElementById('app').style.display=on?'':'none';
-  document.getElementById('addFab').style.display=on?'':'none';
+  document.getElementById('gate').style.display = on?'none':'flex';
+  document.getElementById('app').style.display = on?'':'none';
+  document.getElementById('addFab').style.display = (on && activeTab==='gigs')?'':'none';
 }
+
 async function unlock(){
-  const pw=document.getElementById('g-pass').value;
+  const pw = document.getElementById('g-pass').value;
   if(!pw){document.getElementById('g-err').textContent='Enter a password.';return}
   if(pw.length<4){document.getElementById('g-err').textContent='Use at least 4 characters.';return}
   document.getElementById('g-err').textContent='';
   try{
     if(!window.supabase||/YOUR-PROJECT-REF/.test(SB_URL)){
-      document.getElementById('g-err').textContent=
-        'Supabase not configured. Paste your URL and key into the CONFIG section of index.html.';return}
-    sb=window.supabase.createClient(SB_URL,SB_KEY);
-    passHash=await sha256(pw);
+      document.getElementById('g-err').textContent='Supabase not configured.';return}
+    sb = window.supabase.createClient(SB_URL,SB_KEY);
+    passHash = await sha256(pw);
     localStorage.setItem(HASH_KEY,passHash);
-    await load();
+    await loadGigs();
+    await loadCS();
     showApp(true);
-    render();
+    renderGigs();
   }catch(err){
     document.getElementById('g-err').textContent='Error: '+(err.message||err);
   }
 }
+
 async function autoUnlock(){
-  const saved=localStorage.getItem(HASH_KEY);
+  const saved = localStorage.getItem(HASH_KEY);
   if(!saved||!window.supabase||/YOUR-PROJECT-REF/.test(SB_URL)) return false;
   try{
-    sb=window.supabase.createClient(SB_URL,SB_KEY);
-    passHash=saved;
-    await load();
+    sb = window.supabase.createClient(SB_URL,SB_KEY);
+    passHash = saved;
+    await loadGigs();
+    await loadCS();
     showApp(true);
-    render();
+    renderGigs();
     return true;
   }catch(e){return false}
 }
-document.getElementById('g-unlock').onclick=unlock;
-document.getElementById('g-pass').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
-document.getElementById('lockBtn').onclick=()=>{
-  localStorage.removeItem(HASH_KEY);
-  jobs=[];passHash=null;showApp(false);
-  document.getElementById('g-pass').value='';
-};
 
-(async()=>{if(!await autoUnlock()){/* gate stays visible */}})();
+document.getElementById('g-unlock').onclick = unlock;
+document.getElementById('g-pass').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
+
+(async()=>{if(!await autoUnlock()){/* gate stays */}})();
 </script>
 </body>
 </html>
