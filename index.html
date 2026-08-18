@@ -565,6 +565,73 @@ textarea{resize:vertical;min-height:3.5rem}
 .bank-empty i{font-size:2.5rem;opacity:.3}
 .bank-empty p{font-size:.85rem}
 
+/* ======== VIEW SWITCHER ======== */
+.view-switch{display:flex;border:var(--border-width) solid var(--border-light);
+  background:var(--putih-coway)}
+.view-switch button{padding:.55rem .85rem;font-size:.72rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;color:var(--slate-700);
+  border-right:var(--border-width) solid var(--border-light);display:flex;
+  align-items:center;gap:.35rem;transition:all var(--transition-speed)}
+.view-switch button:last-child{border-right:none}
+.view-switch button:hover{background:var(--gray-100)}
+.view-switch button.on{background:var(--primary-accent);color:var(--putih-coway)}
+.view-switch button i{font-size:.75rem}
+
+/* ---- TABLE VIEW ---- */
+.table-scroll{overflow-x:auto}
+.gig-table{width:100%;border-collapse:collapse;background:var(--putih-coway);
+  border:var(--border-width) solid var(--border-light);font-size:.82rem}
+.gig-table th{text-align:left;padding:.6rem .75rem;font-size:.68rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--slate-700);
+  background:var(--gray-100);border-bottom:var(--border-width) solid var(--border-light);
+  white-space:nowrap}
+.gig-table td{padding:.6rem .75rem;border-bottom:var(--border-width) solid var(--gray-100);
+  vertical-align:middle}
+.gig-table tr:last-child td{border-bottom:none}
+.gig-table tbody tr{cursor:pointer}
+.gig-table tbody tr:hover{background:var(--light-wash-blue)}
+.gig-table .t-plat{font-size:.68rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--gray-400);white-space:nowrap}
+.gig-table .t-name{font-weight:600;color:var(--slate-900)}
+.gig-table .t-link{color:var(--primary-accent);font-size:.75rem}
+
+/* ---- LIST VIEW ---- */
+.gig-list{display:flex;flex-direction:column;gap:var(--border-width);
+  background:var(--border-light);border:var(--border-width) solid var(--border-light)}
+.gig-row{background:var(--putih-coway);padding:.75rem .875rem;display:flex;
+  align-items:center;gap:.75rem;cursor:pointer;transition:background var(--transition-speed)}
+.gig-row:hover{background:var(--light-wash-blue)}
+.gig-row .rail{width:4px;align-self:stretch;flex:0 0 auto}
+.gig-row .r-main{flex:1;min-width:0}
+.gig-row .r-plat{font-size:.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--gray-400)}
+.gig-row .r-name{font-weight:600;font-size:.9rem;color:var(--slate-900);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gig-row .r-badges{display:flex;gap:.375rem;flex-wrap:wrap;flex:0 0 auto}
+
+/* ---- TIMELINE VIEW ---- */
+.timeline{background:var(--putih-coway);border:var(--border-width) solid var(--border-light);
+  padding:1rem 1.25rem}
+.tl-group{margin-bottom:1.25rem}
+.tl-group:last-child{margin-bottom:0}
+.tl-date{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-dark);padding-bottom:.5rem;border-bottom:2px solid var(--primary-accent);
+  margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem}
+.tl-date .tl-count{margin-left:auto;font-weight:600;color:var(--slate-700);
+  background:var(--gray-100);border:var(--border-width) solid var(--border-light);
+  padding:0 .5rem;font-size:.7rem}
+.tl-item{position:relative;cursor:pointer;border-left:2px solid var(--gray-100);
+  padding:.5rem 0 .5rem 1rem;margin-left:.25rem}
+.tl-item:hover{border-left-color:var(--primary-accent);background:var(--light-wash-blue)}
+.tl-item .tl-dot{position:absolute;left:-5px;top:1rem;width:8px;height:8px;
+  background:var(--primary-accent)}
+.tl-plat{font-size:.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--gray-400)}
+.tl-name{font-weight:600;font-size:.88rem;color:var(--slate-900)}
+.tl-meta{display:flex;gap:.375rem;margin-top:.3rem;flex-wrap:wrap}
+.tl-overdue{border-left-color:var(--error-light)}
+.tl-overdue .tl-dot{background:var(--error-red)}
+
 /* ======== 13. RESPONSIVE ======== */
 @media(max-width:1080px){
   .board{grid-template-columns:repeat(2,1fr)}
@@ -637,6 +704,14 @@ textarea{resize:vertical;min-height:3.5rem}
       <button class="btn btn-outline" id="importBtn"><i class="fa-solid fa-file-import"></i> Import</button>
       <input type="file" id="importFile" accept="application/json" hidden>
       <button class="btn btn-ghost" id="resetBtn"><i class="fa-solid fa-arrow-rotate-left"></i> Reset</button>
+    </div>
+    <div class="toolbar" style="margin-top:-.5rem">
+      <div class="view-switch" id="viewSwitch">
+        <button data-view="kanban" class="on"><i class="fa-solid fa-table-columns"></i> Kanban</button>
+        <button data-view="table"><i class="fa-solid fa-table-list"></i> Table</button>
+        <button data-view="list"><i class="fa-solid fa-bars-staggered"></i> List</button>
+        <button data-view="timeline"><i class="fa-solid fa-timeline"></i> Timeline</button>
+      </div>
     </div>
     <div class="board" id="board"></div>
   </div>
@@ -973,6 +1048,7 @@ const GIG_SEED = [
 });
 
 let jobs = [], gigQuery = '', openMenu = null;
+let gigView = (()=>{ try{ return localStorage.getItem('sidegig_view')||'kanban' }catch(e){ return 'kanban' } })();
 
 /* ================================================================
    CONTENT STUDIO DATA
@@ -1182,7 +1258,22 @@ function renderGigs(){
      <div class="tally-cell tc-apply"><b>${c('applied')}</b><span><i class="fa-solid fa-paper-plane"></i> Applied</span></div>
      <div class="tally-cell tc-work"><b>${c('working')}</b><span><i class="fa-solid fa-microchip"></i> Working</span></div>
      <div class="tally-cell tc-done"><b>${c('done')}</b><span><i class="fa-solid fa-trophy"></i> Done</span></div>`;
-  const board = document.getElementById('board'); board.innerHTML = '';
+  const board = document.getElementById('board');
+  board.className = gigView==='kanban' ? 'board' : '';
+  board.innerHTML = '';
+  if(gigView==='kanban')      renderKanban(board);
+  else if(gigView==='table')  renderTable(board);
+  else if(gigView==='list')   renderList(board);
+  else                        renderTimeline(board);
+}
+
+const SEC_COLOR = {available:'var(--info-blue)',applied:'var(--warning-orange)',
+  working:'var(--success-green)',done:'var(--teal-accent)'};
+const SEC_LABEL = {available:'Available',applied:'Applied',working:'Working On',done:'Done / Paid'};
+function visibleGigs(){ return jobs.filter(gigMatches); }
+function emptyMsg(){ return gigQuery?'No matches.':'Nothing here yet.'; }
+
+function renderKanban(board){
   SECTIONS.forEach(sec=>{
     const list = jobs.filter(j=>sectionOf(j)===sec.id && gigMatches(j));
     const ico = {available:'fa-layer-group',applied:'fa-paper-plane',working:'fa-microchip',done:'fa-trophy'}[sec.id];
@@ -1191,9 +1282,95 @@ function renderGigs(){
       <span class="col-count">${list.length}</span></div><div class="col-body"></div>`;
     board.appendChild(col);
     const body = col.querySelector('.col-body');
-    if(!list.length){body.innerHTML=`<div class="empty">${gigQuery?'No matches.':'Nothing here yet.'}</div>`;return}
+    if(!list.length){body.innerHTML=`<div class="empty">${emptyMsg()}</div>`;return}
     list.forEach(j=>body.appendChild(gigCardEl(j)));
   });
+}
+
+function renderTable(board){
+  const list = visibleGigs().sort((a,b)=>
+    SECTIONS.findIndex(s=>s.id===sectionOf(a)) - SECTIONS.findIndex(s=>s.id===sectionOf(b)));
+  if(!list.length){board.innerHTML=`<div class="empty">${emptyMsg()}</div>`;return}
+  const rows = list.map(j=>{
+    const dl = deadlineInfo(j.deadline);
+    const dlCell = dl
+      ? `<span class="badge badge-dl" style="background:${urgColor(dl.urg)[0]};color:${urgColor(dl.urg)[1]};border-color:${urgColor(dl.urg)[1]}">${esc(dl.rel)}</span>`
+      : '<span style="color:var(--border-light)">—</span>';
+    return `<tr data-open="${j.id}">
+      <td class="t-plat">${esc(j.platform||'—')}</td>
+      <td class="t-name">${esc(j.job||j.platform||'Untitled')}</td>
+      <td>${statusBadge(j.status)||'<span style="color:var(--border-light)">—</span>'}</td>
+      <td style="color:${SEC_COLOR[sectionOf(j)]};font-weight:600;font-size:.72rem;text-transform:uppercase">${SEC_LABEL[sectionOf(j)]}</td>
+      <td>${j.pay?esc(j.pay):'<span style="color:var(--border-light)">—</span>'}</td>
+      <td>${j.payment?esc(j.payment):'<span style="color:var(--border-light)">—</span>'}</td>
+      <td>${dlCell}</td>
+      <td>${j.url?`<a class="t-link" href="${esc(tidyUrl(j.url))}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="fa-solid fa-up-right-from-square"></i></a>`:'<span style="color:var(--border-light)">—</span>'}</td>
+    </tr>`;
+  }).join('');
+  board.innerHTML = `<div class="table-scroll"><table class="gig-table">
+    <thead><tr><th>Platform</th><th>Role</th><th>Status</th><th>Stage</th>
+      <th>Pay</th><th>Method</th><th>Deadline</th><th>Link</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function renderList(board){
+  const list = visibleGigs().sort((a,b)=>
+    SECTIONS.findIndex(s=>s.id===sectionOf(a)) - SECTIONS.findIndex(s=>s.id===sectionOf(b)));
+  if(!list.length){board.innerHTML=`<div class="empty">${emptyMsg()}</div>`;return}
+  board.innerHTML = `<div class="gig-list">${list.map(j=>{
+    const dl = deadlineInfo(j.deadline);
+    const dlBadge = dl?`<span class="badge badge-dl" style="background:${urgColor(dl.urg)[0]};color:${urgColor(dl.urg)[1]};border-color:${urgColor(dl.urg)[1]}"><i class="fa-solid fa-clock"></i> ${esc(dl.rel)}</span>`:'';
+    return `<div class="gig-row" data-open="${j.id}">
+      <div class="rail" style="background:${SEC_COLOR[sectionOf(j)]}"></div>
+      <div class="r-main">
+        <div class="r-plat">${esc(j.platform||'—')}</div>
+        <div class="r-name">${esc(j.job||j.platform||'Untitled')}</div>
+      </div>
+      <div class="r-badges">${statusBadge(j.status)}${dlBadge}
+        ${j.pay?`<span class="badge badge-pay"><i class="fa-solid fa-coins"></i> ${esc(j.pay)}</span>`:''}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderTimeline(board){
+  const withDl = visibleGigs().filter(j=>j.deadline && deadlineInfo(j.deadline))
+    .sort((a,b)=>deadlineInfo(a.deadline).date - deadlineInfo(b.deadline).date);
+  const noDl = visibleGigs().filter(j=>!j.deadline || !deadlineInfo(j.deadline));
+  if(!withDl.length && !noDl.length){board.innerHTML=`<div class="empty">${emptyMsg()}</div>`;return}
+  // group by calendar day
+  const groups = [];
+  withDl.forEach(j=>{
+    const d = deadlineInfo(j.deadline).date;
+    const key = d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric',year:'numeric'});
+    let g = groups.find(x=>x.key===key);
+    if(!g){g={key,items:[]};groups.push(g)}
+    g.items.push(j);
+  });
+  const itemHtml = j=>{
+    const dl = deadlineInfo(j.deadline);
+    const over = dl && dl.urg==='overdue';
+    const time = dl ? dl.label.split(', ').slice(-1)[0] : '';
+    return `<div class="tl-item${over?' tl-overdue':''}" data-open="${j.id}">
+      <div class="tl-dot"></div>
+      <div class="tl-plat">${esc(j.platform||'—')}${time?' · '+esc(time):''}</div>
+      <div class="tl-name">${esc(j.job||j.platform||'Untitled')}</div>
+      <div class="tl-meta">${statusBadge(j.status)}
+        <span class="badge" style="background:var(--gray-100);color:${SEC_COLOR[sectionOf(j)]};border-color:${SEC_COLOR[sectionOf(j)]}">${SEC_LABEL[sectionOf(j)]}</span>
+        ${j.pay?`<span class="badge badge-pay"><i class="fa-solid fa-coins"></i> ${esc(j.pay)}</span>`:''}</div>
+    </div>`;
+  };
+  let html = groups.map(g=>`<div class="tl-group">
+      <div class="tl-date"><i class="fa-solid fa-calendar-day"></i> ${esc(g.key)}
+        <span class="tl-count">${g.items.length}</span></div>
+      ${g.items.map(itemHtml).join('')}</div>`).join('');
+  if(noDl.length){
+    html += `<div class="tl-group">
+      <div class="tl-date" style="border-bottom-color:var(--border-light);color:var(--slate-700)">
+        <i class="fa-solid fa-calendar-xmark"></i> No deadline set
+        <span class="tl-count">${noDl.length}</span></div>
+      ${noDl.map(itemHtml).join('')}</div>`;
+  }
+  board.innerHTML = `<div class="timeline">${html}</div>`;
 }
 
 function renderDeadlines(){
@@ -1937,6 +2114,17 @@ document.getElementById('gigModal').addEventListener('click',e=>{if(e.target.id=
    TOOLBAR
 ================================================================ */
 document.getElementById('addFab').onclick = ()=>openGigModal(null);
+document.getElementById('viewSwitch').addEventListener('click',e=>{
+  const b = e.target.closest('[data-view]'); if(!b) return;
+  gigView = b.dataset.view;
+  try{ localStorage.setItem('sidegig_view', gigView) }catch(err){}
+  document.querySelectorAll('#viewSwitch button').forEach(x=>x.classList.toggle('on',x===b));
+  renderGigs();
+});
+document.getElementById('board').addEventListener('click',e=>{
+  const row = e.target.closest('[data-open]');
+  if(row && !e.target.closest('a')) openGigModal(row.dataset.open);
+});
 document.getElementById('search').addEventListener('input',e=>{gigQuery=e.target.value;renderGigs()});
 document.getElementById('exportBtn').onclick = ()=>{
   const blob = new Blob([JSON.stringify(jobs,null,2)],{type:'application/json'});
@@ -2027,7 +2215,11 @@ async function autoUnlock(){
 document.getElementById('g-unlock').onclick = unlock;
 document.getElementById('g-pass').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
 
-(async()=>{if(!await autoUnlock()){/* gate stays */}})();
+(async()=>{
+  document.querySelectorAll('#viewSwitch button').forEach(b=>
+    b.classList.toggle('on', b.dataset.view===gigView));
+  if(!await autoUnlock()){/* gate stays */}
+})();
 </script>
 </body>
 </html>
