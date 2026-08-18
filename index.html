@@ -916,6 +916,34 @@ const STATUS_STYLE = {
   'paid':        ['var(--success-light)','var(--success-dark)','var(--success-green)'],
 };
 const PAYMENT_SUGGEST = ['PayPal','Payoneer','Wise','Bank transfer','Direct deposit','Crypto','Gift card','Cheque'];
+const PLATFORM_OPTIONS = ['OneForma','TELUS Digital AI','Mercor','ATLAS Capture','Meridial AI',
+  'OpenTrain AI','SME Career','RWS','Turing','Alignerr','AfterQuery','Ceipal','BabelAudio',
+  'Pila8','micro1','AttaPoll','ViewPoints by Meta','Tee Public','KLED','Outlier AI','Voices',
+  'Wellfound','Perle','Other'];
+const ROLE_OPTIONS = ['Generalist','AI Data Specialist','Voice Talent','Data Annotator','Other'];
+/* Build a <select> + free-text "Other" input pair. Returns HTML. */
+function buildOtherSelect(selId, txtId, options, current, placeholder){
+  const known = options.includes(current) && current!=='Other';
+  const isOther = !!current && !known;
+  const opts = ['<option value="">— select —</option>']
+    .concat(options.map(o=>{
+      const sel = (o==='Other') ? (isOther?' selected':'') : (o===current?' selected':'');
+      return `<option value="${esc(o)}"${sel}>${esc(o)}</option>`;
+    })).join('');
+  return `<select id="${selId}">${opts}</select>
+    <input type="text" id="${txtId}" value="${isOther?esc(current):''}"
+      placeholder="${esc(placeholder)}" style="margin-top:.4rem;display:${isOther?'':'none'}">`;
+}
+/* Wire the pair so choosing "Other" reveals the text box. Returns a getter. */
+function wireOtherSelect(root, selId, txtId){
+  const sel = root.querySelector('#'+selId), txt = root.querySelector('#'+txtId);
+  sel.addEventListener('change',()=>{
+    const other = sel.value==='Other';
+    txt.style.display = other?'':'none';
+    if(other) txt.focus(); else txt.value='';
+  });
+  return ()=> (sel.value==='Other' ? txt.value.trim() : sel.value);
+}
 const GIG_SEED = [
   ['Outlier AI','https://outlier.ai/','Verification'],
   ['AttaPoll','',''],['ViewPoints by Meta','',''],
@@ -1860,9 +1888,9 @@ function openGigModal(id){
   const body = document.getElementById('gigModalBody');
   body.innerHTML=`
     <div class="form-group"><label><i class="fa-solid fa-building"></i> Platform Name</label>
-      <input type="text" id="f-platform" value="${esc(j.platform)}" placeholder="e.g. Outlier AI"></div>
-    <div class="form-group"><label><i class="fa-solid fa-briefcase"></i> Job Name <span class="opt">(optional)</span></label>
-      <input type="text" id="f-job" value="${esc(j.job)}" placeholder="e.g. AI Data Specialist – Indonesian"></div>
+      ${buildOtherSelect('f-platform','f-platform-other',PLATFORM_OPTIONS,j.platform,'Type platform name…')}</div>
+    <div class="form-group"><label><i class="fa-solid fa-briefcase"></i> Job Role <span class="opt">(optional)</span></label>
+      ${buildOtherSelect('f-job','f-job-other',ROLE_OPTIONS,j.job,'Type job role…')}</div>
     <div class="form-group"><label><i class="fa-solid fa-link"></i> Link <span class="opt">(optional)</span></label>
       <input type="url" id="f-url" value="${esc(j.url)}" placeholder="https://…"></div>
     <div class="row2">
@@ -1882,10 +1910,12 @@ function openGigModal(id){
     <div class="form-group"><label><i class="fa-solid fa-note-sticky"></i> Notes <span class="opt">(optional)</span></label>
       <textarea id="f-notes" placeholder="Deadlines, task type, contacts…">${esc(j.notes)}</textarea></div>`;
   showGigModal(true);
+  const getPlatform = wireOtherSelect(body,'f-platform','f-platform-other');
+  const getJob = wireOtherSelect(body,'f-job','f-job-other');
   body.querySelector('#f-platform').focus();
   document.getElementById('gig-save').onclick = ()=>{
-    const platform = body.querySelector('#f-platform').value.trim();
-    const job = body.querySelector('#f-job').value.trim();
+    const platform = getPlatform();
+    const job = getJob();
     if(!platform&&!job){body.querySelector('#f-platform').focus();return}
     const data = {platform,job,url:body.querySelector('#f-url').value.trim(),
       pay:body.querySelector('#f-pay').value.trim(),
