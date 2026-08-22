@@ -632,6 +632,65 @@ textarea{resize:vertical;min-height:3.5rem}
 .tl-overdue{border-left-color:var(--error-light)}
 .tl-overdue .tl-dot{background:var(--error-red)}
 
+/* ======== TO-DO PAGE ======== */
+#todo-panel{padding-top:1.25rem}
+.td-today{background:var(--light-wash-blue);border:var(--border-width) solid var(--primary-accent);
+  padding:.875rem 1rem;margin-bottom:1.25rem}
+.td-today-h{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--water-care-dark);margin-bottom:.625rem;display:flex;align-items:center;gap:.4rem}
+.td-today-h .n{margin-left:auto;background:var(--putih-coway);
+  border:var(--border-width) solid var(--primary-accent);padding:0 .5rem;font-size:.7rem}
+.td-today-list{display:flex;flex-wrap:wrap;gap:.5rem}
+.td-chip{background:var(--putih-coway);border:var(--border-width) solid var(--border-light);
+  padding:.4rem .6rem;font-size:.78rem;display:flex;align-items:center;gap:.5rem;cursor:pointer}
+.td-chip:hover{border-color:var(--primary-accent)}
+.td-empty-today{font-size:.8rem;color:var(--slate-700)}
+
+/* section tabs */
+.td-tabs{display:flex;border-bottom:var(--border-width) solid var(--border-light);
+  margin-bottom:1rem;overflow-x:auto}
+.td-tabs button{padding:.7rem 1rem;font-size:.75rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--slate-700);display:flex;align-items:center;gap:.4rem;
+  white-space:nowrap;border-bottom:3px solid transparent;transition:all var(--transition-speed)}
+.td-tabs button:hover{background:var(--gray-100)}
+.td-tabs button .tcount{background:var(--gray-100);border:var(--border-width) solid var(--border-light);
+  padding:0 .4rem;font-size:.68rem;font-weight:600}
+.td-tabs button.on{border-bottom-color:currentColor}
+
+/* stat strip */
+.td-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--border-width);
+  background:var(--border-light);border:var(--border-width) solid var(--border-light);
+  margin-bottom:1rem}
+.td-stat{background:var(--putih-coway);padding:.7rem .9rem}
+.td-stat b{font-size:1.35rem;font-weight:700;display:block;line-height:1}
+.td-stat span{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--slate-700);font-weight:600}
+
+/* task rows */
+.td-list{display:flex;flex-direction:column;gap:var(--border-width);
+  background:var(--border-light);border:var(--border-width) solid var(--border-light)}
+.td-item{background:var(--putih-coway);padding:.65rem .8rem;display:flex;align-items:center;
+  gap:.65rem;transition:background var(--transition-speed)}
+.td-item:hover{background:var(--light-wash-blue)}
+.td-item.done{opacity:.55}
+.td-pri{width:3px;align-self:stretch;flex:0 0 auto}
+.td-check{width:16px;height:16px;flex:0 0 auto;border:2px solid var(--border-light);
+  background:var(--putih-coway);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;color:var(--putih-coway);font-size:.6rem}
+.td-check:hover{border-color:var(--primary-accent)}
+.td-check.on{background:var(--success-green);border-color:var(--success-green)}
+.td-body{flex:1;min-width:0}
+.td-text{font-size:.875rem;font-weight:500;color:var(--slate-900)}
+.td-item.done .td-text{text-decoration:line-through;color:var(--slate-700)}
+.td-note{font-size:.72rem;color:var(--slate-700);margin-top:.15rem}
+.td-meta{display:flex;gap:.375rem;align-items:center;flex:0 0 auto;flex-wrap:wrap}
+.td-del{color:var(--gray-400);cursor:pointer;padding:.25rem;font-size:.8rem;flex:0 0 auto}
+.td-del:hover{color:var(--error-red)}
+.td-add-row{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.td-add-row input[type=text]{flex:1 1 220px}
+.td-add-row input[type=date]{flex:0 0 auto;width:auto}
+.td-add-row select{flex:0 0 auto;width:auto}
+
 /* ======== 13. RESPONSIVE ======== */
 @media(max-width:1080px){
   .board{grid-template-columns:repeat(2,1fr)}
@@ -678,6 +737,9 @@ textarea{resize:vertical;min-height:3.5rem}
       </button>
       <button class="app-tab" id="tab-bank" onclick="switchTab('bank')">
         <i class="fa-solid fa-bookmark"></i> Idea Bank
+      </button>
+      <button class="app-tab" id="tab-todo" onclick="switchTab('todo')">
+        <i class="fa-solid fa-list-check"></i> To-Do
       </button>
       <span class="app-tab-lock" id="lockBtn"><i class="fa-solid fa-lock"></i> Lock</span>
     </div>
@@ -877,6 +939,36 @@ textarea{resize:vertical;min-height:3.5rem}
 
     <div class="bank-grid" id="bank-grid"></div>
   </div><!-- /bank-panel -->
+
+  <!-- ===== TO-DO PANEL ===== -->
+  <div id="todo-panel" class="page-wrap" style="display:none">
+    <div class="page-header">
+      <h1><i class="fa-solid fa-list-check"></i> To-Do</h1>
+      <p>Everything on your plate, split across the four areas of your life.</p>
+      <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
+        <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
+        <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
+      </svg>
+    </div>
+
+    <div class="td-today" id="td-today"></div>
+
+    <div class="td-tabs" id="td-tabs"></div>
+    <div class="td-stats" id="td-stats"></div>
+
+    <div class="td-add-row">
+      <input type="text" id="td-new" placeholder="Add a task and press Enter…">
+      <select id="td-new-pri">
+        <option value="normal">Normal</option>
+        <option value="high">High</option>
+        <option value="low">Low</option>
+      </select>
+      <input type="date" id="td-new-due">
+      <button class="btn btn-primary" id="td-add"><i class="fa-solid fa-plus"></i> Add</button>
+    </div>
+
+    <div class="td-list" id="td-list"></div>
+  </div><!-- /todo-panel -->
 
 </div><!-- /app -->
 
@@ -1205,12 +1297,15 @@ function switchTab(tab){
   document.getElementById('tab-gigs').classList.toggle('active', tab==='gigs');
   document.getElementById('tab-content').classList.toggle('active', tab==='content');
   document.getElementById('tab-bank').classList.toggle('active', tab==='bank');
+  document.getElementById('tab-todo').classList.toggle('active', tab==='todo');
   document.getElementById('gigs-panel').style.display = tab==='gigs' ? '' : 'none';
   document.getElementById('cs-panel').style.display = tab==='content' ? '' : 'none';
   document.getElementById('bank-panel').style.display = tab==='bank' ? '' : 'none';
+  document.getElementById('todo-panel').style.display = tab==='todo' ? '' : 'none';
   document.getElementById('addFab').style.display = tab==='gigs' ? '' : 'none';
   if(tab==='content') renderCS();
   if(tab==='bank') renderBank();
+  if(tab==='todo') renderTodo();
 }
 
 /* ================================================================
@@ -2172,6 +2267,177 @@ document.getElementById('lockBtn').onclick = ()=>{
 /* ================================================================
    AUTH + BOOT
 ================================================================ */
+
+/* ================================================================
+   TO-DO
+================================================================ */
+const TD_SECTIONS = [
+  {id:'main',   label:'Main job',        icon:'fa-briefcase',   color:'var(--info-blue)'},
+  {id:'side',   label:'Side job',        icon:'fa-coins',       color:'var(--success-dark)'},
+  {id:'social', label:'Social media',    icon:'fa-clapperboard',color:'var(--accent-purple)'},
+  {id:'growth', label:'Personal growth', icon:'fa-seedling',    color:'var(--teal-accent)'},
+];
+const TD_PRI = {
+  high:   ['var(--error-light)','var(--error-red)','var(--error-red)'],
+  normal: ['var(--gray-100)','var(--slate-700)','var(--border-light)'],
+  low:    ['var(--gray-100)','var(--gray-400)','var(--gray-100)'],
+};
+const TD_CACHE_KEY = 'sidegig_todo_cache';
+let todos = [], tdSection = 'main';
+
+async function loadTodo(){
+  let raw = null;
+  try{ raw = await store.get('todo_data', passHash) }
+  catch(e){ try{ raw = JSON.parse(localStorage.getItem(TD_CACHE_KEY)) }catch(_){} }
+  if(raw){
+    try{ const d = typeof raw==='string' ? JSON.parse(raw) : raw;
+      if(Array.isArray(d)){ todos = d; return } }catch(e){}
+  }
+  todos = [];
+  await saveTodo(true);
+}
+async function saveTodo(silent){
+  try{
+    localStorage.setItem(TD_CACHE_KEY, JSON.stringify(todos));
+    await store.set('todo_data', passHash, todos);
+    if(!silent) flash('Synced');
+  }catch(e){ console.error(e); if(!silent) flash('Offline — saved locally') }
+}
+
+function tdDueInfo(iso){
+  if(!iso) return null;
+  const d = new Date(iso+'T23:59:59'); if(isNaN(d)) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(iso+'T00:00:00'); due.setHours(0,0,0,0);
+  const days = Math.round((due-today)/864e5);
+  let rel, urg;
+  if(days<0){ urg='overdue'; rel = days===-1?'yesterday':`${-days}d late`; }
+  else if(days===0){ urg='today'; rel='today'; }
+  else if(days===1){ urg='soon'; rel='tomorrow'; }
+  else { urg='later'; rel=`in ${days}d`; }
+  return {days, rel, urg};
+}
+function tdDueStyle(urg){
+  return urg==='overdue' ? ['var(--error-light)','var(--error-red)']
+       : urg==='today'   ? ['var(--warning-light)','var(--amber-gold)']
+       : urg==='soon'    ? ['var(--warning-light)','var(--warning-orange)']
+       : ['var(--gray-100)','var(--slate-700)'];
+}
+const tdSec = id => TD_SECTIONS.find(s=>s.id===id) || TD_SECTIONS[0];
+
+function renderTodo(){
+  renderTodoToday();
+  // tabs
+  document.getElementById('td-tabs').innerHTML = TD_SECTIONS.map(s=>{
+    const open = todos.filter(t=>t.section===s.id && !t.done).length;
+    const on = s.id===tdSection;
+    return `<button data-td-tab="${s.id}" class="${on?'on':''}"
+      style="color:${on?s.color:'var(--slate-700)'}">
+      <i class="fa-solid ${s.icon}"></i> ${s.label}
+      <span class="tcount">${open}</span></button>`;
+  }).join('');
+  // stats for the active section
+  const list = todos.filter(t=>t.section===tdSection);
+  const open = list.filter(t=>!t.done).length;
+  const overdue = list.filter(t=>!t.done && t.due && tdDueInfo(t.due) && tdDueInfo(t.due).urg==='overdue').length;
+  const done = list.filter(t=>t.done).length;
+  document.getElementById('td-stats').innerHTML =
+    `<div class="td-stat"><b style="color:${tdSec(tdSection).color}">${open}</b><span>Open</span></div>
+     <div class="td-stat"><b style="color:var(--error-red)">${overdue}</b><span>Overdue</span></div>
+     <div class="td-stat"><b style="color:var(--success-green)">${done}</b><span>Done</span></div>`;
+  // task list — open first (by due date), then done
+  const sorted = list.slice().sort((a,b)=>{
+    if(a.done!==b.done) return a.done?1:-1;
+    if(a.due&&b.due) return a.due.localeCompare(b.due);
+    if(a.due) return -1; if(b.due) return 1;
+    return (b.added||0)-(a.added||0);
+  });
+  const el = document.getElementById('td-list');
+  if(!sorted.length){
+    el.innerHTML = `<div class="empty">No tasks in ${esc(tdSec(tdSection).label)} yet — add one above.</div>`;
+    return;
+  }
+  el.innerHTML = sorted.map(t=>{
+    const pri = TD_PRI[t.priority]||TD_PRI.normal;
+    const due = tdDueInfo(t.due);
+    const dueBadge = due && !t.done
+      ? (([bg,fg])=>`<span class="badge" style="background:${bg};color:${fg};border-color:${fg}"><i class="fa-solid fa-calendar-day"></i> ${esc(due.rel)}</span>`)(tdDueStyle(due.urg))
+      : '';
+    const priBadge = t.priority==='high' && !t.done
+      ? `<span class="badge" style="background:${pri[0]};color:${pri[1]};border-color:${pri[2]}"><i class="fa-solid fa-flag"></i> High</span>` : '';
+    return `<div class="td-item${t.done?' done':''}">
+      <span class="td-pri" style="background:${t.done?'var(--border-light)':pri[1]}"></span>
+      <span class="td-check${t.done?' on':''}" data-td-toggle="${t.id}"><i class="fa-solid fa-check"></i></span>
+      <div class="td-body"><div class="td-text">${esc(t.text)}</div>
+        ${t.note?`<div class="td-note">${esc(t.note)}</div>`:''}</div>
+      <div class="td-meta">${priBadge}${dueBadge}</div>
+      <span class="td-del" data-td-del="${t.id}"><i class="fa-solid fa-trash-can"></i></span>
+    </div>`;
+  }).join('');
+}
+
+function renderTodoToday(){
+  const el = document.getElementById('td-today');
+  const focus = todos.filter(t=>{
+    if(t.done || !t.due) return false;
+    const d = tdDueInfo(t.due);
+    return d && (d.urg==='overdue' || d.urg==='today');
+  }).sort((a,b)=>a.due.localeCompare(b.due));
+  const head = `<div class="td-today-h"><i class="fa-solid fa-fire"></i> Today's focus
+    <span class="n">${focus.length}</span></div>`;
+  if(!focus.length){
+    el.innerHTML = head + `<div class="td-empty-today">Nothing due today. Anything overdue or due today shows up here.</div>`;
+    return;
+  }
+  el.innerHTML = head + `<div class="td-today-list">${focus.map(t=>{
+    const s = tdSec(t.section); const d = tdDueInfo(t.due);
+    const late = d.urg==='overdue';
+    return `<div class="td-chip" data-td-toggle="${t.id}">
+      <span class="td-check" style="pointer-events:none"></span>
+      <span>${esc(t.text)}</span>
+      <span class="badge" style="background:var(--gray-100);color:${s.color};border-color:${s.color}">${esc(s.label)}</span>
+      ${late?`<span class="badge" style="background:var(--error-light);color:var(--error-red);border-color:var(--error-red)">${esc(d.rel)}</span>`:''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function tdAdd(){
+  const inp = document.getElementById('td-new');
+  const text = inp.value.trim();
+  if(!text){ inp.focus(); return }
+  todos.unshift({
+    id:'td_'+Date.now(), text, section:tdSection,
+    priority:document.getElementById('td-new-pri').value,
+    due:document.getElementById('td-new-due').value,
+    note:'', done:false, added:Date.now()
+  });
+  inp.value=''; document.getElementById('td-new-due').value='';
+  document.getElementById('td-new-pri').value='normal';
+  saveTodo(); renderTodo(); inp.focus();
+}
+
+document.getElementById('td-tabs').addEventListener('click',e=>{
+  const b = e.target.closest('[data-td-tab]'); if(!b) return;
+  tdSection = b.dataset.tdTab; renderTodo();
+});
+document.getElementById('td-add').onclick = tdAdd;
+document.getElementById('td-new').addEventListener('keydown',e=>{ if(e.key==='Enter') tdAdd() });
+document.getElementById('todo-panel').addEventListener('click',e=>{
+  const tg = e.target.closest('[data-td-toggle]');
+  if(tg){
+    const t = todos.find(x=>x.id===tg.dataset.tdToggle);
+    if(t){ t.done=!t.done; saveTodo(); renderTodo() }
+    return;
+  }
+  const dl = e.target.closest('[data-td-del]');
+  if(dl){
+    const t = todos.find(x=>x.id===dl.dataset.tdDel);
+    if(t && confirm('Delete this task?')){
+      todos = todos.filter(x=>x.id!==t.id); saveTodo(); renderTodo();
+    }
+  }
+});
+
 function showApp(on){
   document.getElementById('gate').style.display = on?'none':'flex';
   document.getElementById('app').style.display = on?'':'none';
@@ -2191,6 +2457,7 @@ async function unlock(){
     localStorage.setItem(HASH_KEY,passHash);
     await loadGigs();
     await loadCS();
+    await loadTodo();
     showApp(true);
     renderGigs();
   }catch(err){
@@ -2206,6 +2473,7 @@ async function autoUnlock(){
     passHash = saved;
     await loadGigs();
     await loadCS();
+    await loadTodo();
     showApp(true);
     renderGigs();
     return true;
