@@ -706,20 +706,27 @@ textarea{resize:vertical;min-height:3.5rem}
 </head>
 <body>
 
-<!-- Password Gate -->
+<!-- Google Sign-In Gate -->
 <div class="gate" id="gate">
   <div class="gate-card">
     <h1><i class="fa-solid fa-satellite-dish"></i> Dashboard</h1>
-    <p class="sub">Enter your password to unlock Side Gig Tracker + Content Studio. Same password = same data synced across devices.</p>
-    <div class="form-group">
-      <label><i class="fa-solid fa-lock"></i> Password</label>
-      <input type="password" id="g-pass" placeholder="Your sync password" autocomplete="off">
-    </div>
+    <p class="sub">Sign in with Google to unlock Side Gig Tracker, Content Studio, Idea Bank and To-Do — synced across every device.</p>
     <div class="gate-err" id="g-err"></div>
     <div class="gate-actions">
-      <button class="btn btn-primary" id="g-unlock"><i class="fa-solid fa-lock-open"></i> Unlock</button>
+      <button class="btn btn-primary" id="g-google"><i class="fa-brands fa-google"></i> Continue with Google</button>
     </div>
-    <p class="gate-hint"><i class="fa-solid fa-circle-info"></i> First time? Pick any password — it becomes your sync key. Use the same password on another device to access the same data. There's no recovery, so don't forget it.</p>
+    <div id="g-migrate" style="display:none;margin-top:1rem;padding:.75rem;
+      background:var(--warning-light);border:var(--border-width) solid var(--warning-orange)">
+      <div style="font-size:.78rem;color:var(--amber-gold);font-weight:600;margin-bottom:.4rem">
+        <i class="fa-solid fa-box-archive"></i> Old password data found</div>
+      <div style="font-size:.75rem;color:var(--slate-700);margin-bottom:.6rem">
+        Enter your old sync password once to copy that data into your Google account.</div>
+      <input type="password" id="g-oldpass" placeholder="Old sync password" autocomplete="off"
+        style="margin-bottom:.5rem">
+      <button class="btn btn-outline" id="g-migrate-btn" style="width:100%">
+        <i class="fa-solid fa-arrow-right-arrow-left"></i> Import old data</button>
+    </div>
+    <p class="gate-hint"><i class="fa-solid fa-circle-info"></i> Your data is tied to your Google account. Sign in with the same account on any device to see the same board.</p>
   </div>
 </div>
 
@@ -741,7 +748,8 @@ textarea{resize:vertical;min-height:3.5rem}
       <button class="app-tab" id="tab-todo" onclick="switchTab('todo')">
         <i class="fa-solid fa-list-check"></i> To-Do
       </button>
-      <span class="app-tab-lock" id="lockBtn"><i class="fa-solid fa-lock"></i> Lock</span>
+      <span class="app-tab-lock" id="importOldBtn" style="display:none"><i class="fa-solid fa-box-archive"></i> Import old data</span>
+      <span class="app-tab-lock" id="lockBtn"><i class="fa-solid fa-right-from-bracket"></i> <span id="userEmail"></span> Sign out</span>
     </div>
   </nav>
 
@@ -2257,11 +2265,10 @@ document.getElementById('resetBtn').onclick = ()=>{
 /* ================================================================
    LOCK
 ================================================================ */
-document.getElementById('lockBtn').onclick = ()=>{
-  localStorage.removeItem(HASH_KEY);
-  jobs=[];projects=[];ideas=[];passHash=null;
+document.getElementById('lockBtn').onclick = async ()=>{
+  try{ if(sb) await sb.auth.signOut() }catch(e){}
+  jobs=[];projects=[];ideas=[];todos=[];passHash=null;
   showApp(false);
-  document.getElementById('g-pass').value='';
 };
 
 /* ================================================================
@@ -2444,50 +2451,103 @@ function showApp(on){
   document.getElementById('addFab').style.display = (on && activeTab==='gigs')?'':'none';
 }
 
-async function unlock(){
-  const pw = document.getElementById('g-pass').value;
-  if(!pw){document.getElementById('g-err').textContent='Enter a password.';return}
-  if(pw.length<4){document.getElementById('g-err').textContent='Use at least 4 characters.';return}
-  document.getElementById('g-err').textContent='';
+function gErr(msg){ document.getElementById('g-err').textContent = msg||'' }
+
+function ensureClient(){
+  if(sb) return true;
+  if(!window.supabase || /YOUR-PROJECT-REF/.test(SB_URL)){
+    gErr('Supabase not configured.'); return false;
+  }
+  sb = window.supabase.createClient(SB_URL, SB_KEY);
+  return true;
+}
+
+async function signInGoogle(){
+  gErr('');
+  if(!ensureClient()) return;
+  const {error} = await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{ redirectTo: window.location.origin + window.location.pathname }
+  });
+  if(error) gErr(error.message);
+}
+
+/* After sign-in the Supabase user id becomes the sync key. */
+async function enterApp(session){
+  passHash = session.user.id;
+  const em = document.getElementById('userEmail');
+  if(em) em.textContent = session.user.email ? session.user.email.split('@')[0] : '';
+  await loadGigs();
+  await loadCS();
+  await loadTodo();
+  showApp(true);
+  renderGigs();
+}
+
+/* One-time import of data stored under the old password hash. */
+async function migrateOldData(){
+  const pw = document.getElementById('g-oldpass').value;
+  if(!pw){ gErr('Enter your old password.'); return }
+  gErr('');
   try{
-    if(!window.supabase||/YOUR-PROJECT-REF/.test(SB_URL)){
-      document.getElementById('g-err').textContent='Supabase not configured.';return}
-    sb = window.supabase.createClient(SB_URL,SB_KEY);
-    passHash = await sha256(pw);
-    localStorage.setItem(HASH_KEY,passHash);
-    await loadGigs();
-    await loadCS();
-    await loadTodo();
-    showApp(true);
-    renderGigs();
-  }catch(err){
-    document.getElementById('g-err').textContent='Error: '+(err.message||err);
+    const oldHash = await sha256(pw);
+    let found = false;
+    const pull = async (table)=>{
+      try{
+        const {data} = await sb.from(table).select('data').eq('pass_hash', oldHash).maybeSingle();
+        return data ? data.data : null;
+      }catch(e){ return null }
+    };
+    const g = await pull('gig_data_v2');
+    if(g){ const arr = typeof g==='string'?JSON.parse(g):g;
+      if(Array.isArray(arr)&&arr.length){ jobs = arr; await saveGigs(true); found = true } }
+    const c = await pull('cs_data');
+    if(c){ const d = typeof c==='string'?JSON.parse(c):c;
+      if(d){ projects = d.projects||projects; ideas = d.ideas||ideas;
+        ideaBank = d.ideaBank||ideaBank; await saveCS(true); found = true } }
+    const t = await pull('todo_data');
+    if(t){ const arr = typeof t==='string'?JSON.parse(t):t;
+      if(Array.isArray(arr)&&arr.length){ todos = arr; await saveTodo(true); found = true } }
+    if(found){
+      document.getElementById('g-migrate').style.display='none';
+      localStorage.removeItem(HASH_KEY);
+      renderGigs(); flash('Old data imported');
+    } else {
+      gErr('No data found for that password.');
+    }
+  }catch(e){ gErr('Import failed: '+(e.message||e)) }
+}
+
+document.getElementById('g-google').onclick = signInGoogle;
+document.getElementById('g-migrate-btn').onclick = migrateOldData;
+
+async function boot(){
+  document.querySelectorAll('#viewSwitch button').forEach(b=>
+    b.classList.toggle('on', b.dataset.view===gigView));
+  if(!ensureClient()) return;
+  sb.auth.onAuthStateChange(async (_e, session)=>{
+    if(session && !passHash) await enterApp(session);
+  });
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){
+    await enterApp(session);
+    // offer migration if legacy password data is still around
+    // legacy password data may still exist — surface an import option in the gate
+    if(localStorage.getItem(HASH_KEY)){
+      const ib = document.getElementById('importOldBtn');
+      if(ib){
+        ib.style.display='';
+        ib.onclick = ()=>{
+          showApp(false);
+          document.getElementById('g-migrate').style.display='';
+          document.getElementById('g-oldpass').focus();
+        };
+      }
+    }
   }
 }
 
-async function autoUnlock(){
-  const saved = localStorage.getItem(HASH_KEY);
-  if(!saved||!window.supabase||/YOUR-PROJECT-REF/.test(SB_URL)) return false;
-  try{
-    sb = window.supabase.createClient(SB_URL,SB_KEY);
-    passHash = saved;
-    await loadGigs();
-    await loadCS();
-    await loadTodo();
-    showApp(true);
-    renderGigs();
-    return true;
-  }catch(e){return false}
-}
-
-document.getElementById('g-unlock').onclick = unlock;
-document.getElementById('g-pass').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
-
-(async()=>{
-  document.querySelectorAll('#viewSwitch button').forEach(b=>
-    b.classList.toggle('on', b.dataset.view===gigView));
-  if(!await autoUnlock()){/* gate stays */}
-})();
+boot();
 </script>
 </body>
 </html>
