@@ -62,22 +62,79 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 /* ======== 3. PAGE LAYOUT ======== */
 .page-wrap{max-width:1280px;margin:0 auto;padding:0 1.25rem 6rem}
 
-/* ======== 4. APP-LEVEL TAB NAV ======== */
-.app-nav{background:var(--water-care-dark);border-bottom:3px solid var(--primary-accent);
-  position:sticky;top:0;z-index:500}
-.app-nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:stretch;padding:0 1.25rem}
-.app-tab{display:flex;align-items:center;gap:.5rem;padding:.875rem 1.25rem;
-  font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
-  color:rgba(255,255,255,.6);border-bottom:3px solid transparent;margin-bottom:-3px;
-  cursor:pointer;transition:all var(--transition-speed);white-space:nowrap}
-.app-tab i{font-size:.85rem}
-.app-tab:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06)}
-.app-tab.active{color:#fff;border-bottom-color:var(--primary-accent)}
-.app-tab-lock{margin-left:auto;display:flex;align-items:center;gap:.5rem;
-  padding:.875rem 0;color:rgba(255,255,255,.5);font-size:.78rem;font-weight:600;
-  letter-spacing:.04em;cursor:pointer}
-.app-tab-lock:hover{color:rgba(255,255,255,.8)}
-.app-tab-lock i{font-size:.8rem}
+/* ======== 4. SIDEBAR NAV ======== */
+:root{ --sb-w:236px; --sb-w-collapsed:60px; }
+.app-shell{display:flex;min-height:100vh}
+.sidebar{width:var(--sb-w);flex:0 0 auto;background:var(--water-care-dark);
+  border-right:3px solid var(--primary-accent);position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;transition:width var(--transition-speed) ease;
+  z-index:500;overflow:hidden}
+.sidebar.collapsed{width:var(--sb-w-collapsed)}
+.sb-brand{display:flex;align-items:center;gap:.6rem;padding:1rem .9rem;
+  border-bottom:var(--border-width) solid rgba(255,255,255,.12);min-height:58px}
+.sb-brand .logo{width:26px;height:26px;flex:0 0 auto;background:var(--primary-accent);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.sb-brand .bt{color:#fff;font-weight:700;font-size:.9rem;letter-spacing:-.01em;white-space:nowrap}
+.sb-toggle{margin-left:auto;color:rgba(255,255,255,.55);font-size:.8rem;padding:.3rem;
+  cursor:pointer;flex:0 0 auto}
+.sb-toggle:hover{color:#fff}
+.sidebar.collapsed .bt,.sidebar.collapsed .sb-toggle{display:none}
+.sidebar.collapsed .sb-brand{justify-content:center;padding:1rem .5rem}
+
+.sb-nav{flex:1;padding:.6rem 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;
+  font-size:.8rem;font-weight:600;letter-spacing:.03em;color:rgba(255,255,255,.62);
+  border-left:3px solid transparent;cursor:pointer;white-space:nowrap;
+  transition:all var(--transition-speed);width:100%;text-align:left}
+.sb-item i{font-size:.9rem;width:18px;flex:0 0 auto;text-align:center}
+.sb-item:hover{color:#fff;background:rgba(255,255,255,.07)}
+.sb-item.active{color:#fff;background:rgba(255,255,255,.1);border-left-color:var(--primary-accent)}
+.sidebar.collapsed .sb-item{justify-content:center;padding:.7rem .5rem;border-left-width:0;
+  border-right:3px solid transparent}
+.sidebar.collapsed .sb-item.active{border-right-color:var(--primary-accent)}
+.sidebar.collapsed .sb-label{display:none}
+
+/* user block at the bottom */
+.sb-user{border-top:var(--border-width) solid rgba(255,255,255,.12);padding:.75rem .9rem;
+  display:flex;align-items:center;gap:.6rem;position:relative}
+.sb-avatar{width:32px;height:32px;flex:0 0 auto;background:var(--primary-accent);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;
+  font-weight:700;overflow:hidden}
+.sb-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.sb-uinfo{min-width:0;flex:1}
+.sb-uname{color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.sb-umail{color:rgba(255,255,255,.5);font-size:.68rem;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.sb-out{color:rgba(255,255,255,.5);font-size:.8rem;cursor:pointer;padding:.3rem;flex:0 0 auto}
+.sb-out:hover{color:var(--error-red)}
+.sidebar.collapsed .sb-user{justify-content:center;padding:.75rem .5rem}
+.sidebar.collapsed .sb-uinfo,.sidebar.collapsed .sb-out{display:none}
+.sb-extra{padding:0 .9rem .75rem}
+.sb-extra button{width:100%;display:flex;align-items:center;gap:.5rem;
+  color:rgba(255,255,255,.5);font-size:.72rem;font-weight:600;padding:.45rem 0;cursor:pointer}
+.sb-extra button:hover{color:#fff}
+.sidebar.collapsed .sb-extra{display:none}
+
+.app-main{flex:1;min-width:0;overflow-x:hidden}
+
+/* mobile: sidebar becomes an overlay */
+.sb-scrim{display:none;position:fixed;inset:0;background:rgba(27,33,28,.5);z-index:499}
+.sb-mobile-btn{display:none;position:fixed;top:.75rem;left:.75rem;z-index:498;
+  background:var(--water-care-dark);color:#fff;padding:.55rem .7rem;font-size:.9rem;
+  border:var(--border-width) solid var(--primary-accent);cursor:pointer}
+@media(max-width:820px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);
+    transition:transform var(--transition-speed) ease;width:var(--sb-w)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar.collapsed{width:var(--sb-w)}
+  .sidebar.collapsed .bt,.sidebar.collapsed .sb-toggle,
+  .sidebar.collapsed .sb-label,.sidebar.collapsed .sb-uinfo,
+  .sidebar.collapsed .sb-out,.sidebar.collapsed .sb-extra{display:''}
+  .sb-scrim.show{display:block}
+  .sb-mobile-btn{display:block}
+  .app-main{padding-top:3rem}
+}
 
 /* Header */
 .page-header{position:relative;overflow:hidden;
@@ -733,28 +790,51 @@ textarea{resize:vertical;min-height:3.5rem}
 <!-- App shell (hidden until unlocked) -->
 <div id="app" style="display:none">
 
-  <!-- Top nav with tabs -->
-  <nav class="app-nav">
-    <div class="app-nav-inner">
-      <button class="app-tab active" id="tab-gigs" onclick="switchTab('gigs')">
-        <i class="fa-solid fa-satellite-dish"></i> Side Gigs
-      </button>
-      <button class="app-tab" id="tab-content" onclick="switchTab('content')">
-        <i class="fa-solid fa-clapperboard"></i> Content Studio
-      </button>
-      <button class="app-tab" id="tab-bank" onclick="switchTab('bank')">
-        <i class="fa-solid fa-bookmark"></i> Idea Bank
-      </button>
-      <button class="app-tab" id="tab-todo" onclick="switchTab('todo')">
-        <i class="fa-solid fa-list-check"></i> To-Do
-      </button>
-      <span class="app-tab-lock" id="importOldBtn" style="display:none"><i class="fa-solid fa-box-archive"></i> Import old data</span>
-      <span class="app-tab-lock" id="lockBtn"><i class="fa-solid fa-right-from-bracket"></i> <span id="userEmail"></span> Sign out</span>
+  <button class="sb-mobile-btn" id="sbMobileBtn"><i class="fa-solid fa-bars"></i></button>
+  <div class="sb-scrim" id="sbScrim"></div>
+
+  <div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <span class="logo"><i class="fa-solid fa-satellite-dish"></i></span>
+      <span class="bt">Dashboard</span>
+      <span class="sb-toggle" id="sbToggle"><i class="fa-solid fa-angles-left"></i></span>
     </div>
-  </nav>
+
+    <nav class="sb-nav">
+      <button class="sb-item active" id="tab-todo" onclick="switchTab('todo')" title="To-Do">
+        <i class="fa-solid fa-list-check"></i><span class="sb-label">To-Do</span>
+      </button>
+      <button class="sb-item" id="tab-gigs" onclick="switchTab('gigs')" title="Side Gigs">
+        <i class="fa-solid fa-briefcase"></i><span class="sb-label">Side Gigs</span>
+      </button>
+      <button class="sb-item" id="tab-content" onclick="switchTab('content')" title="Content Studio">
+        <i class="fa-solid fa-clapperboard"></i><span class="sb-label">Content Studio</span>
+      </button>
+      <button class="sb-item" id="tab-bank" onclick="switchTab('bank')" title="Idea Bank">
+        <i class="fa-solid fa-lightbulb"></i><span class="sb-label">Idea Bank</span>
+      </button>
+    </nav>
+
+    <div class="sb-extra">
+      <button id="importOldBtn" style="display:none">
+        <i class="fa-solid fa-box-archive"></i> Import old data</button>
+    </div>
+
+    <div class="sb-user">
+      <span class="sb-avatar" id="sbAvatar"><i class="fa-solid fa-user"></i></span>
+      <div class="sb-uinfo">
+        <div class="sb-uname" id="sbUserName">—</div>
+        <div class="sb-umail" id="sbUserMail"></div>
+      </div>
+      <span class="sb-out" id="lockBtn" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></span>
+    </div>
+  </aside>
+
+  <div class="app-main">
 
   <!-- ===== SIDE GIGS PANEL ===== -->
-  <div id="gigs-panel" class="page-wrap" style="padding-top:1.25rem">
+  <div id="gigs-panel" class="page-wrap" style="padding-top:1.25rem;display:none">
     <div class="page-header">
       <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
       <p>Track every side gig from discovery to payday — cards auto-sort by status across four columns.</p>
@@ -949,7 +1029,7 @@ textarea{resize:vertical;min-height:3.5rem}
   </div><!-- /bank-panel -->
 
   <!-- ===== TO-DO PANEL ===== -->
-  <div id="todo-panel" class="page-wrap" style="display:none">
+  <div id="todo-panel" class="page-wrap" style="padding-top:1.25rem">
     <div class="page-header">
       <h1><i class="fa-solid fa-list-check"></i> To-Do</h1>
       <p>Everything on your plate, split across the four areas of your life.</p>
@@ -978,6 +1058,8 @@ textarea{resize:vertical;min-height:3.5rem}
     <div class="td-list" id="td-list"></div>
   </div><!-- /todo-panel -->
 
+  </div><!-- /app-main -->
+  </div><!-- /app-shell -->
 </div><!-- /app -->
 
 <!-- Bank modal -->
@@ -1299,22 +1381,46 @@ document.getElementById('toastClose').onclick = ()=>document.getElementById('toa
 /* ================================================================
    TAB SWITCHING
 ================================================================ */
-let activeTab = 'gigs';
+let activeTab = 'todo';
 function switchTab(tab){
   activeTab = tab;
-  document.getElementById('tab-gigs').classList.toggle('active', tab==='gigs');
-  document.getElementById('tab-content').classList.toggle('active', tab==='content');
-  document.getElementById('tab-bank').classList.toggle('active', tab==='bank');
-  document.getElementById('tab-todo').classList.toggle('active', tab==='todo');
+  [['todo','tab-todo'],['gigs','tab-gigs'],['content','tab-content'],['bank','tab-bank']]
+    .forEach(([id,el])=>{
+      const b = document.getElementById(el);
+      if(b) b.classList.toggle('active', tab===id);
+    });
   document.getElementById('gigs-panel').style.display = tab==='gigs' ? '' : 'none';
   document.getElementById('cs-panel').style.display = tab==='content' ? '' : 'none';
   document.getElementById('bank-panel').style.display = tab==='bank' ? '' : 'none';
   document.getElementById('todo-panel').style.display = tab==='todo' ? '' : 'none';
   document.getElementById('addFab').style.display = tab==='gigs' ? '' : 'none';
+  try{ localStorage.setItem('sidegig_tab', tab) }catch(e){}
   if(tab==='content') renderCS();
   if(tab==='bank') renderBank();
   if(tab==='todo') renderTodo();
+  // close mobile drawer after choosing
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sbScrim').classList.remove('show');
 }
+
+/* ---- sidebar collapse + mobile drawer ---- */
+(function(){
+  const sb = document.getElementById('sidebar');
+  const tg = document.getElementById('sbToggle');
+  const mb = document.getElementById('sbMobileBtn');
+  const sc = document.getElementById('sbScrim');
+  try{ if(localStorage.getItem('sidegig_sb')==='1') sb.classList.add('collapsed') }catch(e){}
+  tg.onclick = ()=>{
+    sb.classList.toggle('collapsed');
+    const c = sb.classList.contains('collapsed');
+    tg.innerHTML = `<i class="fa-solid fa-angles-${c?'right':'left'}"></i>`;
+    try{ localStorage.setItem('sidegig_sb', c?'1':'0') }catch(e){}
+  };
+  if(sb.classList.contains('collapsed'))
+    tg.innerHTML = '<i class="fa-solid fa-angles-right"></i>';
+  mb.onclick = ()=>{ sb.classList.add('open'); sc.classList.add('show') };
+  sc.onclick  = ()=>{ sb.classList.remove('open'); sc.classList.remove('show') };
+})();
 
 /* ================================================================
    GIG TRACKER RENDER
@@ -2475,13 +2581,31 @@ async function signInGoogle(){
 /* After sign-in the Supabase user id becomes the sync key. */
 async function enterApp(session){
   passHash = session.user.id;
-  const em = document.getElementById('userEmail');
-  if(em) em.textContent = session.user.email ? session.user.email.split('@')[0] : '';
+  const u = session.user || {};
+  const meta = u.user_metadata || {};
+  const name = meta.full_name || meta.name || (u.email||'').split('@')[0] || 'Signed in';
+  const pic  = meta.avatar_url || meta.picture || '';
+  const nEl = document.getElementById('sbUserName');
+  const mEl = document.getElementById('sbUserMail');
+  const aEl = document.getElementById('sbAvatar');
+  if(nEl) nEl.textContent = name;
+  if(mEl) mEl.textContent = u.email || '';
+  if(aEl){
+    if(pic){
+      aEl.innerHTML = `<img src="${pic}" alt="" referrerpolicy="no-referrer"
+        onerror="this.parentNode.textContent='${(name[0]||'U').toUpperCase()}'">`;
+    } else {
+      aEl.textContent = (name[0]||'U').toUpperCase();
+    }
+  }
   await loadGigs();
   await loadCS();
   await loadTodo();
   showApp(true);
   renderGigs();
+  let start = 'todo';
+  try{ start = localStorage.getItem('sidegig_tab') || 'todo' }catch(e){}
+  switchTab(start);
 }
 
 /* One-time import of data stored under the old password hash. */
