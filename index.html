@@ -75,11 +75,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .sb-brand .logo{width:26px;height:26px;flex:0 0 auto;background:var(--primary-accent);
   color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem}
 .sb-brand .bt{color:#fff;font-weight:700;font-size:.9rem;letter-spacing:-.01em;white-space:nowrap}
-.sb-toggle{margin-left:auto;color:rgba(255,255,255,.55);font-size:.8rem;padding:.3rem;
-  cursor:pointer;flex:0 0 auto}
-.sb-toggle:hover{color:#fff}
-.sidebar.collapsed .bt,.sidebar.collapsed .sb-toggle{display:none}
-.sidebar.collapsed .sb-brand{justify-content:center;padding:1rem .5rem}
+.sb-toggle{margin-left:auto;color:rgba(255,255,255,.75);font-size:.85rem;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex:0 0 auto;border:var(--border-width) solid rgba(255,255,255,.25);
+  transition:all var(--transition-speed)}
+.sb-toggle:hover{color:#fff;background:var(--primary-accent);border-color:var(--primary-accent)}
+.sidebar.collapsed .sb-toggle{margin-left:0}
+.sidebar.collapsed .bt{display:none}
+.sidebar.collapsed .sb-brand{justify-content:center;padding:1rem .5rem;cursor:pointer}
+.sidebar.collapsed .sb-brand .logo{display:none}
 
 .sb-nav{flex:1;padding:.6rem 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
 .sb-item{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;
@@ -748,6 +752,19 @@ textarea{resize:vertical;min-height:3.5rem}
 .td-add-row input[type=date]{flex:0 0 auto;width:auto}
 .td-add-row select{flex:0 0 auto;width:auto}
 
+.td-atts{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.35rem}
+.td-atts a{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:500;
+  background:var(--info-light);color:var(--info-blue);padding:.15rem .45rem;
+  border:var(--border-width) solid var(--info-blue);max-width:190px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.td-atts a:hover{background:var(--primary-accent);color:var(--putih-coway)}
+.td-edit{color:var(--gray-400);cursor:pointer;padding:.25rem;font-size:.8rem;flex:0 0 auto}
+.td-edit:hover{color:var(--primary-accent)}
+.td-body{cursor:pointer}
+.td-thumbs{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
+.td-thumbs img{width:52px;height:52px;object-fit:cover;
+  border:var(--border-width) solid var(--border-light);cursor:pointer}
+
 /* ======== 13. RESPONSIVE ======== */
 @media(max-width:1080px){
   .board{grid-template-columns:repeat(2,1fr)}
@@ -1104,6 +1121,21 @@ textarea{resize:vertical;min-height:3.5rem}
   </div>
 </div>
 
+<!-- To-Do Modal -->
+<div class="modal-overlay" id="todoModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 id="todoModalTitle">Edit Task</h3>
+      <button id="todoModalClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="todoModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="todo-cancel">Cancel</button>
+      <button class="btn btn-primary" id="todo-save">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Project Modal -->
 <div class="modal-overlay" id="projModal">
   <div class="modal-container">
@@ -1409,15 +1441,29 @@ function switchTab(tab){
   const tg = document.getElementById('sbToggle');
   const mb = document.getElementById('sbMobileBtn');
   const sc = document.getElementById('sbScrim');
-  try{ if(localStorage.getItem('sidegig_sb')==='1') sb.classList.add('collapsed') }catch(e){}
-  tg.onclick = ()=>{
-    sb.classList.toggle('collapsed');
+  const brand = sb.querySelector('.sb-brand');
+  const paint = ()=>{
     const c = sb.classList.contains('collapsed');
     tg.innerHTML = `<i class="fa-solid fa-angles-${c?'right':'left'}"></i>`;
-    try{ localStorage.setItem('sidegig_sb', c?'1':'0') }catch(e){}
+    tg.title = c ? 'Expand sidebar (\\)' : 'Collapse sidebar (\\)';
   };
-  if(sb.classList.contains('collapsed'))
-    tg.innerHTML = '<i class="fa-solid fa-angles-right"></i>';
+  const toggle = ()=>{
+    sb.classList.toggle('collapsed');
+    try{ localStorage.setItem('sidegig_sb', sb.classList.contains('collapsed')?'1':'0') }catch(e){}
+    paint();
+  };
+  try{ if(localStorage.getItem('sidegig_sb')==='1') sb.classList.add('collapsed') }catch(e){}
+  paint();
+  tg.onclick = e=>{ e.stopPropagation(); toggle() };
+  // when collapsed, clicking anywhere on the brand row expands it back
+  brand.onclick = ()=>{ if(sb.classList.contains('collapsed')) toggle() };
+  // keyboard: backslash toggles, unless typing
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='\\') return;
+    const t = e.target.tagName;
+    if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT'||e.target.isContentEditable) return;
+    e.preventDefault(); toggle();
+  });
   mb.onclick = ()=>{ sb.classList.add('open'); sc.classList.add('show') };
   sc.onclick  = ()=>{ sb.classList.remove('open'); sc.classList.remove('show') };
 })();
@@ -2478,13 +2524,26 @@ function renderTodo(){
       : '';
     const priBadge = t.priority==='high' && !t.done
       ? `<span class="badge" style="background:${pri[0]};color:${pri[1]};border-color:${pri[2]}"><i class="fa-solid fa-flag"></i> High</span>` : '';
+    const atts = (t.atts||[]).filter(Boolean);
+    const imgs = atts.filter(isImgUrl);
+    const files = atts.filter(a=>!isImgUrl(a));
+    const attHtml = files.length ? `<div class="td-atts">${files.map(a=>`
+        <a href="${esc(tidyUrl(a))}" target="_blank" rel="noopener" title="${esc(a)}"
+           onclick="event.stopPropagation()"><i class="fa-solid ${attIcon(a)}"></i> ${esc(attLabel(a))}</a>`).join('')}</div>` : '';
+    const imgHtml = imgs.length ? `<div class="td-thumbs">${imgs.map(a=>`
+        <img src="${esc(tidyUrl(a))}" alt="" loading="lazy"
+             onclick="event.stopPropagation();window.open('${esc(tidyUrl(a))}','_blank')">`).join('')}</div>` : '';
     return `<div class="td-item${t.done?' done':''}">
       <span class="td-pri" style="background:${t.done?'var(--border-light)':pri[1]}"></span>
       <span class="td-check${t.done?' on':''}" data-td-toggle="${t.id}"><i class="fa-solid fa-check"></i></span>
-      <div class="td-body"><div class="td-text">${esc(t.text)}</div>
-        ${t.note?`<div class="td-note">${esc(t.note)}</div>`:''}</div>
+      <div class="td-body" data-td-edit="${t.id}">
+        <div class="td-text">${esc(t.text)}</div>
+        ${t.note?`<div class="td-note">${esc(t.note)}</div>`:''}
+        ${imgHtml}${attHtml}
+      </div>
       <div class="td-meta">${priBadge}${dueBadge}</div>
-      <span class="td-del" data-td-del="${t.id}"><i class="fa-solid fa-trash-can"></i></span>
+      <span class="td-edit" data-td-edit="${t.id}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></span>
+      <span class="td-del" data-td-del="${t.id}" title="Delete"><i class="fa-solid fa-trash-can"></i></span>
     </div>`;
   }).join('');
 }
@@ -2514,6 +2573,69 @@ function renderTodoToday(){
   }).join('')}</div>`;
 }
 
+const isImgUrl = u => /\.(png|jpe?g|gif|webp|svg|bmp)(\?|#|$)/i.test(u||'');
+const isPdfUrl = u => /\.pdf(\?|#|$)/i.test(u||'');
+function attIcon(u){
+  if(isPdfUrl(u)) return 'fa-file-pdf';
+  if(isImgUrl(u)) return 'fa-image';
+  if(/docs\.google|\.docx?(\?|#|$)/i.test(u)) return 'fa-file-word';
+  if(/sheets\.google|\.xlsx?(\?|#|$)/i.test(u)) return 'fa-file-excel';
+  if(/drive\.google/i.test(u)) return 'fa-google-drive';
+  return 'fa-link';
+}
+function attLabel(u){
+  try{
+    const p = new URL(tidyUrl(u)).pathname.split('/').filter(Boolean).pop();
+    return decodeURIComponent(p || new URL(tidyUrl(u)).host.replace(/^www\./,''));
+  }catch(e){ return u }
+}
+
+function openTodoModal(id){
+  const t = todos.find(x=>x.id===id); if(!t) return;
+  document.getElementById('todoModalTitle').textContent = 'Edit Task';
+  const secOpts = TD_SECTIONS.map(s=>
+    `<option value="${s.id}"${s.id===t.section?' selected':''}>${esc(s.label)}</option>`).join('');
+  const priOpts = ['high','normal','low'].map(p=>
+    `<option value="${p}"${p===(t.priority||'normal')?' selected':''}>${p[0].toUpperCase()+p.slice(1)}</option>`).join('');
+  const body = document.getElementById('todoModalBody');
+  body.innerHTML = `
+    <div class="form-group"><label><i class="fa-solid fa-pen"></i> Task</label>
+      <input type="text" id="tm-text" value="${esc(t.text)}"></div>
+    <div class="form-group"><label><i class="fa-solid fa-align-left"></i> Details <span class="opt">(optional)</span></label>
+      <textarea id="tm-note" placeholder="Extra context, steps, links…">${esc(t.note||'')}</textarea></div>
+    <div class="row2">
+      <div class="form-group"><label><i class="fa-solid fa-layer-group"></i> Section</label>
+        <select id="tm-section">${secOpts}</select></div>
+      <div class="form-group"><label><i class="fa-solid fa-flag"></i> Priority</label>
+        <select id="tm-pri">${priOpts}</select></div>
+    </div>
+    <div class="form-group"><label><i class="fa-solid fa-calendar-day"></i> Deadline <span class="opt">(optional)</span></label>
+      <input type="date" id="tm-due" value="${esc(t.due||'')}"></div>
+    <div class="form-group">
+      <label><i class="fa-solid fa-paperclip"></i> Attachments <span class="opt">(one link per line — image, PDF, Drive, any URL)</span></label>
+      <textarea id="tm-atts" placeholder="https://drive.google.com/…&#10;https://…/brief.pdf&#10;https://…/shot.jpg">${esc((t.atts||[]).join('\n'))}</textarea>
+      <span class="form-hint">Image links render as thumbnails; everything else shows as a labelled chip.</span></div>`;
+  showTodoModal(true);
+  body.querySelector('#tm-text').focus();
+  document.getElementById('todo-save').onclick = ()=>{
+    const text = body.querySelector('#tm-text').value.trim();
+    if(!text){ body.querySelector('#tm-text').focus(); return }
+    t.text = text;
+    t.note = body.querySelector('#tm-note').value.trim();
+    t.section = body.querySelector('#tm-section').value;
+    t.priority = body.querySelector('#tm-pri').value;
+    t.due = body.querySelector('#tm-due').value;
+    t.atts = body.querySelector('#tm-atts').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    saveTodo(); renderTodo(); showTodoModal(false);
+  };
+}
+function showTodoModal(on){ document.getElementById('todoModal').classList.toggle('active', on) }
+document.getElementById('todoModalClose').onclick = ()=>showTodoModal(false);
+document.getElementById('todo-cancel').onclick = ()=>showTodoModal(false);
+document.getElementById('todoModal').addEventListener('click',e=>{
+  if(e.target.id==='todoModal') showTodoModal(false);
+});
+
 function tdAdd(){
   const inp = document.getElementById('td-new');
   const text = inp.value.trim();
@@ -2522,7 +2644,7 @@ function tdAdd(){
     id:'td_'+Date.now(), text, section:tdSection,
     priority:document.getElementById('td-new-pri').value,
     due:document.getElementById('td-new-due').value,
-    note:'', done:false, added:Date.now()
+    note:'', atts:[], done:false, added:Date.now()
   });
   inp.value=''; document.getElementById('td-new-due').value='';
   document.getElementById('td-new-pri').value='normal';
@@ -2542,6 +2664,8 @@ document.getElementById('todo-panel').addEventListener('click',e=>{
     if(t){ t.done=!t.done; saveTodo(); renderTodo() }
     return;
   }
+  const ed = e.target.closest('[data-td-edit]');
+  if(ed){ openTodoModal(ed.dataset.tdEdit); return }
   const dl = e.target.closest('[data-td-del]');
   if(dl){
     const t = todos.find(x=>x.id===dl.dataset.tdDel);
