@@ -152,18 +152,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .page-header svg.wave{position:absolute;bottom:0;left:0;width:100%;height:40px}
 
 /* Tally stats */
-.tally-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--border-width);
-  background-color:var(--border-light);border:var(--border-width) solid var(--border-light);
-  margin-bottom:1.25rem}
-.tally-cell{background:var(--putih-coway);padding:.75rem 1rem;display:flex;
-  flex-direction:column;gap:.15rem}
-.tally-cell b{font-size:1.5rem;font-weight:700;line-height:1;letter-spacing:-.02em}
-.tally-cell span{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--slate-700);font-weight:600;display:flex;align-items:center;gap:.3rem}
-.tally-cell span i{font-size:.65rem}
-.tc-avail b{color:var(--info-blue)} .tc-apply b{color:var(--warning-orange)}
-.tc-work b{color:var(--success-green)} .tc-done b{color:var(--teal-accent)}
-
 /* Toolbar */
 .toolbar{display:flex;flex-wrap:wrap;gap:.625rem;align-items:center;margin-bottom:1.25rem}
 .search-box{position:relative;flex:1 1 220px;min-width:180px}
@@ -536,19 +524,19 @@ textarea{resize:vertical;min-height:3.5rem}
 
 /* ======== 14. IDEA BANK ======== */
 .bank-toolbar{display:flex;flex-wrap:wrap;gap:.625rem;align-items:center;
-  margin-bottom:1.25rem}
-.bank-filters{display:flex;gap:var(--border-width);background:var(--border-light);
-  border:var(--border-width) solid var(--border-light);flex:0 0 auto}
-.bank-ftab{display:flex;align-items:center;gap:.4rem;padding:.5rem .875rem;
+  margin-bottom:1.25rem;border-bottom:var(--border-width) solid var(--border-light);
+  padding-bottom:.5rem}
+.bank-filters{display:flex;gap:0;background:transparent;border:none;flex:0 0 auto}
+.bank-ftab{display:flex;align-items:center;gap:.4rem;padding:.7rem 1rem;
   font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
-  color:var(--slate-700);background:var(--putih-coway);cursor:pointer;
-  border-bottom:2px solid transparent;transition:all var(--transition-speed)}
+  color:var(--slate-700);background:transparent;cursor:pointer;white-space:nowrap;
+  border-bottom:3px solid transparent;transition:all var(--transition-speed)}
 .bank-ftab i{font-size:.75rem}
-.bank-ftab:hover{color:var(--text-dark);background:var(--light-wash-blue)}
-.bank-ftab.active{color:var(--primary-accent);border-bottom-color:var(--primary-accent)}
-.bank-ftab[data-bank-plat="instagram"].active{color:var(--ig-purple);border-bottom-color:var(--ig-purple)}
-.bank-ftab[data-bank-plat="tiktok"].active{color:#010101;border-bottom-color:#010101}
-.bank-ftab[data-bank-plat="youtube"].active{color:var(--yt-red);border-bottom-color:var(--yt-red)}
+.bank-ftab:hover{color:var(--text-dark);background:var(--gray-100)}
+.bank-ftab.active{color:var(--primary-accent);border-bottom-color:currentColor}
+.bank-ftab[data-bank-plat="instagram"].active{color:var(--ig-purple)}
+.bank-ftab[data-bank-plat="tiktok"].active{color:#010101}
+.bank-ftab[data-bank-plat="youtube"].active{color:var(--yt-red)}
 .bank-cat-wrap select{padding:.45rem .875rem;font-size:.8rem;
   border:var(--border-width) solid var(--border-light);background:var(--putih-coway);
   color:var(--text-dark);min-width:160px}
@@ -719,14 +707,6 @@ textarea{resize:vertical;min-height:3.5rem}
 .td-tabs button.on{border-bottom-color:currentColor}
 
 /* stat strip */
-.td-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--border-width);
-  background:var(--border-light);border:var(--border-width) solid var(--border-light);
-  margin-bottom:1rem}
-.td-stat{background:var(--putih-coway);padding:.7rem .9rem}
-.td-stat b{font-size:1.35rem;font-weight:700;display:block;line-height:1}
-.td-stat span{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--slate-700);font-weight:600}
-
 /* task rows */
 .td-list{display:flex;flex-direction:column;gap:var(--border-width);
   background:var(--border-light);border:var(--border-width) solid var(--border-light)}
@@ -765,15 +745,25 @@ textarea{resize:vertical;min-height:3.5rem}
 .td-thumbs img{width:52px;height:52px;object-fit:cover;
   border:var(--border-width) solid var(--border-light);cursor:pointer}
 
+/* shared page stat strip — used by every page */
+.pg-stats{display:grid;gap:var(--border-width);background:var(--border-light);
+  border:var(--border-width) solid var(--border-light);margin-bottom:1.25rem}
+.pg-stats.c3{grid-template-columns:repeat(3,1fr)}
+.pg-stats.c4{grid-template-columns:repeat(4,1fr)}
+.pg-stat{background:var(--putih-coway);padding:.7rem .9rem}
+.pg-stat b{font-size:1.35rem;font-weight:700;display:block;line-height:1;letter-spacing:-.02em}
+.pg-stat span{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--slate-700);font-weight:600;display:flex;align-items:center;gap:.3rem}
+.pg-stat span i{font-size:.65rem}
+@media(max-width:700px){.pg-stats.c4{grid-template-columns:repeat(2,1fr)}}
+
 /* ======== 13. RESPONSIVE ======== */
 @media(max-width:1080px){
   .board{grid-template-columns:repeat(2,1fr)}
-  .tally-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:600px){
   .board{grid-template-columns:1fr}
   .row2{grid-template-columns:1fr}
-  .tally-grid{grid-template-columns:repeat(2,1fr)}
   .cs-layout{grid-template-columns:1fr}
 }
 </style>
@@ -852,7 +842,7 @@ textarea{resize:vertical;min-height:3.5rem}
 
   <!-- ===== SIDE GIGS PANEL ===== -->
   <div id="gigs-panel" class="page-wrap" style="padding-top:1.25rem;display:none">
-    <div class="page-header">
+    <div class="page-header" style="background:linear-gradient(135deg,#064E3B 0%,#12B76A 100%)">
       <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
       <p>Track every side gig from discovery to payday — cards auto-sort by status across four columns.</p>
       <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
@@ -860,7 +850,7 @@ textarea{resize:vertical;min-height:3.5rem}
         <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
       </svg>
     </div>
-    <div class="tally-grid" id="tally"></div>
+    <div class="pg-stats c4" id="tally"></div>
     <div class="deadlines-strip" id="deadlines"></div>
     <div class="toolbar">
       <div class="search-box">
@@ -944,6 +934,8 @@ textarea{resize:vertical;min-height:3.5rem}
       </a>
     </div>
 
+    <div class="pg-stats c4" id="cs-stats"></div>
+
     <!-- Posting deadlines strip -->
     <div class="cs-deadlines" id="cs-deadlines"></div>
 
@@ -1003,7 +995,7 @@ textarea{resize:vertical;min-height:3.5rem}
 
   <!-- ===== IDEA BANK PANEL ===== -->
   <div id="bank-panel" class="page-wrap" style="display:none">
-    <div class="page-header" style="background:linear-gradient(135deg,#0f172a 0%,#334155 100%)">
+    <div class="page-header" style="background:linear-gradient(135deg,#7A3E00 0%,#F79009 100%)">
       <h1><i class="fa-solid fa-bookmark"></i> Idea Bank</h1>
       <p>Save inspiration from TikTok, Instagram, and YouTube — video previews, categories, and quick links.</p>
       <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
@@ -1011,6 +1003,8 @@ textarea{resize:vertical;min-height:3.5rem}
         <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
       </svg>
     </div>
+
+    <div class="pg-stats c4" id="bank-stats"></div>
 
     <!-- Bank toolbar -->
     <div class="bank-toolbar">
@@ -1059,7 +1053,7 @@ textarea{resize:vertical;min-height:3.5rem}
     <div class="td-today" id="td-today"></div>
 
     <div class="td-tabs" id="td-tabs"></div>
-    <div class="td-stats" id="td-stats"></div>
+    <div class="pg-stats c3" id="td-stats"></div>
 
     <div class="td-add-row">
       <input type="text" id="td-new" placeholder="Add a task and press Enter…">
@@ -1509,10 +1503,10 @@ function renderGigs(){
   renderDeadlines();
   const c = s => jobs.filter(j=>sectionOf(j)===s).length;
   document.getElementById('tally').innerHTML =
-    `<div class="tally-cell tc-avail"><b>${c('available')}</b><span><i class="fa-solid fa-layer-group"></i> Available</span></div>
-     <div class="tally-cell tc-apply"><b>${c('applied')}</b><span><i class="fa-solid fa-paper-plane"></i> Applied</span></div>
-     <div class="tally-cell tc-work"><b>${c('working')}</b><span><i class="fa-solid fa-microchip"></i> Working</span></div>
-     <div class="tally-cell tc-done"><b>${c('done')}</b><span><i class="fa-solid fa-trophy"></i> Done</span></div>`;
+    `<div class="pg-stat"><b style="color:var(--info-blue)">${c('available')}</b><span><i class="fa-solid fa-layer-group"></i> Available</span></div>
+     <div class="pg-stat"><b style="color:var(--warning-orange)">${c('applied')}</b><span><i class="fa-solid fa-paper-plane"></i> Applied</span></div>
+     <div class="pg-stat"><b style="color:var(--success-green)">${c('working')}</b><span><i class="fa-solid fa-microchip"></i> Working</span></div>
+     <div class="pg-stat"><b style="color:var(--teal-accent)">${c('done')}</b><span><i class="fa-solid fa-trophy"></i> Done</span></div>`;
   const board = document.getElementById('board');
   board.className = gigView==='kanban' ? 'board' : '';
   board.innerHTML = '';
@@ -1731,9 +1725,23 @@ function fmtProjDate(iso){
 }
 
 function renderCS(){
+  renderCSStats();
   renderCSDeadlines();
   renderProjects();
   renderIdeas();
+}
+
+function renderCSStats(){
+  const el = document.getElementById('cs-stats'); if(!el) return;
+  const active = projects.filter(p=>!/posted|done|complete/i.test(p.status||'')).length;
+  const posted = projects.filter(p=>/posted|done|complete/i.test(p.status||'')).length;
+  const openIdeas = ideas.filter(i=>!i.posted && !/posted/i.test(i.status||'')).length;
+  const scheduled = projects.filter(p=>p.scheduled).length;
+  el.innerHTML =
+    `<div class="pg-stat"><b style="color:var(--accent-purple)">${active}</b><span><i class="fa-solid fa-clapperboard"></i> In progress</span></div>
+     <div class="pg-stat"><b style="color:var(--info-blue)">${scheduled}</b><span><i class="fa-solid fa-calendar-day"></i> Scheduled</span></div>
+     <div class="pg-stat"><b style="color:var(--warning-orange)">${openIdeas}</b><span><i class="fa-solid fa-lightbulb"></i> Open ideas</span></div>
+     <div class="pg-stat"><b style="color:var(--success-green)">${posted}</b><span><i class="fa-solid fa-circle-check"></i> Posted</span></div>`;
 }
 
 function renderCSDeadlines(){
@@ -1954,7 +1962,18 @@ function buildThumbHtml(item){
   </div>`;
 }
 
+function renderBankStats(){
+  const el = document.getElementById('bank-stats'); if(!el) return;
+  const n = p => ideaBank.filter(b=>(b.platform||'').toLowerCase()===p).length;
+  el.innerHTML =
+    `<div class="pg-stat"><b style="color:var(--warning-orange)">${ideaBank.length}</b><span><i class="fa-solid fa-bookmark"></i> Saved</span></div>
+     <div class="pg-stat"><b style="color:var(--ig-purple)">${n('instagram')}</b><span><i class="fa-brands fa-instagram"></i> Instagram</span></div>
+     <div class="pg-stat"><b style="color:#010101">${n('tiktok')}</b><span><i class="fa-brands fa-tiktok"></i> TikTok</span></div>
+     <div class="pg-stat"><b style="color:var(--yt-red)">${n('youtube')}</b><span><i class="fa-brands fa-youtube"></i> YouTube</span></div>`;
+}
+
 function renderBank(){
+  renderBankStats();
   const q = (document.getElementById('bank-search')?.value||'').toLowerCase();
   const cat = document.getElementById('bank-cat-filter')?.value||'';
   let list = ideaBank.slice();
@@ -2501,9 +2520,9 @@ function renderTodo(){
   const overdue = list.filter(t=>!t.done && t.due && tdDueInfo(t.due) && tdDueInfo(t.due).urg==='overdue').length;
   const done = list.filter(t=>t.done).length;
   document.getElementById('td-stats').innerHTML =
-    `<div class="td-stat"><b style="color:${tdSec(tdSection).color}">${open}</b><span>Open</span></div>
-     <div class="td-stat"><b style="color:var(--error-red)">${overdue}</b><span>Overdue</span></div>
-     <div class="td-stat"><b style="color:var(--success-green)">${done}</b><span>Done</span></div>`;
+    `<div class="pg-stat"><b style="color:${tdSec(tdSection).color}">${open}</b><span><i class="fa-solid fa-circle-dot"></i> Open</span></div>
+     <div class="pg-stat"><b style="color:var(--error-red)">${overdue}</b><span><i class="fa-solid fa-triangle-exclamation"></i> Overdue</span></div>
+     <div class="pg-stat"><b style="color:var(--success-green)">${done}</b><span><i class="fa-solid fa-circle-check"></i> Done</span></div>`;
   // task list — open first (by due date), then done
   const sorted = list.slice().sort((a,b)=>{
     if(a.done!==b.done) return a.done?1:-1;
