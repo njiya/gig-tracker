@@ -565,6 +565,8 @@ textarea{resize:vertical;min-height:3.5rem}
   justify-content:center;background:rgba(0,0,0,.25);cursor:pointer;
   transition:background var(--transition-speed);text-decoration:none}
 .bc-thumb .bc-play-overlay:hover{background:rgba(0,0,0,.45)}
+.bc-thumb .bc-play-overlay--img{background:rgba(0,0,0,.06)}
+.bc-thumb .bc-play-overlay--img:hover{background:rgba(0,0,0,.2)}
 .bc-thumb .bc-play-overlay i{font-size:2rem;color:#fff;opacity:.85}
 .bc-thumb .bc-no-preview{position:absolute;inset:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:.625rem}
@@ -576,8 +578,9 @@ textarea{resize:vertical;min-height:3.5rem}
 
 /* Card body */
 .bc-body{padding:.5rem;display:flex;flex-direction:column;gap:.3rem}
-.bc-title{font-size:.72rem;font-weight:600;color:var(--slate-900);line-height:1.3;
-  letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bc-title{font-size:.72rem;font-weight:600;color:var(--slate-900);line-height:1.35;
+  letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;min-height:1.9em}
 .bc-meta{display:flex;align-items:center;gap:.25rem;flex-wrap:wrap}
 .bc-plat-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.08rem .3rem;
   font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
@@ -589,6 +592,12 @@ textarea{resize:vertical;min-height:3.5rem}
   font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em;
   background:var(--purple-light);color:var(--accent-purple);
   border:var(--border-width) solid var(--accent-purple)}
+.bc-ctype-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.08rem .3rem;
+  font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+  background:var(--light-wash-blue);color:var(--info-blue);border:var(--border-width) solid var(--info-blue)}
+.bc-dup-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.08rem .3rem;
+  font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+  background:var(--warning-light);color:var(--warning-orange);border:var(--border-width) solid var(--warning-orange)}
 .bc-note{font-size:.7rem;color:var(--slate-700);line-height:1.35;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
@@ -1956,11 +1965,24 @@ function buildThumbHtml(item){
 
   // --- TikTok/Instagram: use fetched thumbnail if available, else branded bg ---
   if(parsed.type==='tiktok'){
+    const isVideo = !item.contentType || item.contentType === 'video';
     if(thumbSrc){
       return `<div class="bc-thumb">
         <img src="${thumbSrc}" alt="" loading="lazy" onerror="this.parentElement.classList.add('bc-thumb-fallback-tt')">
-        <a class="bc-play-overlay" href="${esc(item.url)}" target="_blank" rel="noopener">
+        <a class="${isVideo?'bc-play-overlay':'bc-play-overlay bc-play-overlay--img'}" href="${esc(item.url)}" target="_blank" rel="noopener">
           <i class="fa-brands fa-tiktok"></i>
+        </a>
+      </div>`;
+    }
+    // No thumbnail: for carousel/story show upload hint overlay
+    if(!isVideo){
+      return `<div class="bc-thumb" style="background:linear-gradient(160deg,#010101 0%,#1a1a2e 55%,#0f3460 100%)">
+        <div class="bc-no-preview" style="color:rgba(255,255,255,.8)">
+          <i class="fa-solid fa-image" style="color:#69C9D0"></i>
+          <span>add thumbnail</span>
+        </div>
+        <a class="bc-play-overlay" href="${esc(item.url)}" target="_blank" rel="noopener" style="background:transparent">
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:1rem;opacity:.6"></i>
         </a>
       </div>`;
     }
@@ -2039,7 +2061,9 @@ function renderBank(){
           <span class="bc-plat-badge ${getBankPlatBadgeClass(item.platform)}">
             <i class="${getBankPlatIcon(item.platform)}"></i> ${esc(item.platform||'—')}
           </span>
+          ${item.contentType?`<span class="bc-ctype-badge"><i class="fa-solid fa-${item.contentType==='video'?'video':item.contentType==='carousel'?'layer-group':'circle-play'}"></i> ${esc(item.contentType)}</span>`:''}
           ${item.category?`<span class="bc-cat-badge"><i class="fa-solid fa-tag"></i> ${esc(item.category)}</span>`:''}
+          ${item.isDuplicate?`<span class="bc-dup-badge"><i class="fa-solid fa-copy"></i> Duplicate</span>`:''}
         </div>
         ${item.note?`<div class="bc-note">${esc(item.note)}</div>`:''}
       </div>
@@ -2089,37 +2113,86 @@ async function fetchOembedThumb(url, platform){
 
 function openBankModal(id){
   const item = id ? ideaBank.find(x=>x.id===id) : null;
-  const it = item||{url:'',title:'',platform:'',category:'',note:''};
+  const it = item||{url:'',title:'',platform:'',category:'',note:'',contentType:'',isDuplicate:false,thumbnail:''};
   document.getElementById('bankModalTitle').textContent = item ? 'Edit Inspo' : 'Add Inspo';
   const platOpts = ['','instagram','tiktok','youtube'].map(o=>
     `<option value="${esc(o)}" ${o===it.platform?'selected':''}>${o||'— detect from URL —'}</option>`).join('');
   const catOpts = ['', ...BANK_CATEGORIES].map(o=>
     `<option value="${esc(o)}" ${o===it.category?'selected':''}>${o||'— no category —'}</option>`).join('');
+  const ctypes = ['video','carousel','story'];
+  const ctypeHtml = ctypes.map(ct=>`
+    <label style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer;
+      font-size:.78rem;font-weight:600;padding:.35rem .7rem;
+      border:var(--border-width) solid var(--border-light);
+      background:${it.contentType===ct?'var(--primary-accent)':'var(--putih-coway)'};
+      color:${it.contentType===ct?'#fff':'var(--slate-700)'};
+      transition:all .15s">
+      <input type="radio" name="bk-ctype" value="${ct}" ${it.contentType===ct?'checked':''}
+        style="display:none">
+      <i class="fa-solid fa-${ct==='video'?'video':ct==='carousel'?'layer-group':'circle-play'}"></i> ${ct.charAt(0).toUpperCase()+ct.slice(1)}
+    </label>`).join('');
+
   document.getElementById('bankModalBody').innerHTML=`
     <div class="form-group"><label><i class="fa-solid fa-link"></i> Video / Post URL</label>
       <input type="url" id="bk-url" value="${esc(it.url)}" placeholder="https://www.tiktok.com/@…">
       <span class="form-hint">YouTube and TikTok thumbnails are fetched automatically on save. Instagram shows a gradient placeholder (their API requires a login token).</span></div>
     <div class="form-group"><label><i class="fa-solid fa-heading"></i> Title <span class="opt">(opt.)</span></label>
       <input type="text" id="bk-title" value="${esc(it.title||'')}" placeholder="e.g. POV: solo date in Jakarta"></div>
+    <div class="form-group"><label><i class="fa-solid fa-film"></i> Content Type</label>
+      <div id="bk-ctype-wrap" style="display:flex;gap:.4rem;flex-wrap:wrap">${ctypeHtml}</div></div>
     <div class="row2">
       <div class="form-group"><label><i class="fa-solid fa-share-nodes"></i> Platform <span class="opt">(opt.)</span></label>
         <select id="bk-platform">${platOpts}</select></div>
       <div class="form-group"><label><i class="fa-solid fa-tag"></i> Category <span class="opt">(opt.)</span></label>
         <select id="bk-cat">${catOpts}</select></div>
     </div>
+    <div class="form-group" id="bk-thumb-upload-wrap" style="display:${(it.platform==='tiktok'&&it.contentType&&it.contentType!=='video')||(!it.contentType&&it.platform==='tiktok')?'block':'none'}">
+      <label><i class="fa-solid fa-image"></i> Thumbnail Image <span class="opt">(for carousel/story)</span></label>
+      <input type="file" id="bk-thumb-file" accept="image/*">
+      ${it.thumbnail?`<div style="margin-top:.4rem"><img src="${esc(it.thumbnail)}" style="max-height:80px;max-width:100%;object-fit:cover;border:var(--border-width) solid var(--border-light)"></div>`:''}
+      <span class="form-hint">Upload a cover image for TikTok carousels or story posts.</span>
+    </div>
+    <div class="form-group">
+      <label style="display:inline-flex;align-items:center;gap:.6rem;cursor:pointer">
+        <input type="checkbox" id="bk-dup" ${it.isDuplicate?'checked':''}
+          style="width:15px;height:15px;accent-color:var(--warning-orange)">
+        <span><i class="fa-solid fa-copy" style="color:var(--warning-orange)"></i> Mark as duplicate</span>
+      </label>
+      <span class="form-hint">Check if this idea already exists as another inspo in the bank.</span>
+    </div>
     <div class="form-group"><label><i class="fa-solid fa-note-sticky"></i> Note <span class="opt">(opt.)</span></label>
       <textarea id="bk-note" placeholder="What caught your eye? Style, idea, format…">${esc(it.note)}</textarea></div>`;
   showBankModal(true);
   document.getElementById('bk-url').focus();
 
+  // Toggle TikTok thumbnail upload visibility based on platform + content type
+  function updateThumbUploadVisibility(){
+    const plat = document.getElementById('bk-platform').value;
+    const ctype = document.querySelector('input[name="bk-ctype"]:checked')?.value||'';
+    const show = plat==='tiktok' && ctype && ctype!=='video';
+    document.getElementById('bk-thumb-upload-wrap').style.display = show?'block':'none';
+  }
+  document.getElementById('bk-platform').addEventListener('change', updateThumbUploadVisibility);
+  document.getElementById('bk-ctype-wrap').addEventListener('change', updateThumbUploadVisibility);
+
+  // Style radio buttons on change
+  document.getElementById('bk-ctype-wrap').addEventListener('change', e=>{
+    document.querySelectorAll('#bk-ctype-wrap label').forEach(l=>{
+      const inp = l.querySelector('input');
+      l.style.background = inp.checked?'var(--primary-accent)':'var(--putih-coway)';
+      l.style.color = inp.checked?'#fff':'var(--slate-700)';
+    });
+  });
+
   // auto-detect platform from URL
   document.getElementById('bk-url').addEventListener('blur', ()=>{
     const u = document.getElementById('bk-url').value;
     const sel = document.getElementById('bk-platform');
-    if(sel.value) return; // don't override if manually set
+    if(sel.value) return;
     if(/tiktok\.com/.test(u)) sel.value='tiktok';
     else if(/instagram\.com/.test(u)) sel.value='instagram';
     else if(/youtube\.com|youtu\.be/.test(u)) sel.value='youtube';
+    updateThumbUploadVisibility();
   });
 
   document.getElementById('bank-save').onclick = async ()=>{
@@ -2131,16 +2204,25 @@ function openBankModal(id){
       else if(/instagram\.com/.test(url)) platform='instagram';
       else if(/youtube\.com|youtu\.be/.test(url)) platform='youtube';
     }
+    const contentType = document.querySelector('input[name="bk-ctype"]:checked')?.value||'';
+    const isDuplicate = document.getElementById('bk-dup').checked;
 
-    // Show a saving state
     const saveBtn = document.getElementById('bank-save');
     const origHtml = saveBtn.innerHTML;
     saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
     saveBtn.disabled = true;
 
-    // Fetch thumbnail if not already stored
+    // Fetch/keep thumbnail
     let thumbnail = item?.thumbnail || '';
-    if(!thumbnail || document.getElementById('bk-url').value.trim() !== (item?.url||'')){
+    // Check for uploaded image file first (TikTok carousel/story)
+    const fileInput = document.getElementById('bk-thumb-file');
+    if(fileInput?.files?.length){
+      thumbnail = await new Promise(res=>{
+        const r = new FileReader();
+        r.onload = e=>res(e.target.result);
+        r.readAsDataURL(fileInput.files[0]);
+      });
+    } else if(!thumbnail || document.getElementById('bk-url').value.trim() !== (item?.url||'')){
       thumbnail = await fetchOembedThumb(url, platform);
     }
 
@@ -2153,6 +2235,8 @@ function openBankModal(id){
       platform,
       category: document.getElementById('bk-cat').value,
       note: document.getElementById('bk-note').value.trim(),
+      contentType,
+      isDuplicate,
       thumbnail,
     };
     if(item){Object.assign(item,data)}else{ideaBank.unshift({id:'b_'+Date.now(),...data})}
