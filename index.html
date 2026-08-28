@@ -2063,7 +2063,9 @@ function renderBank(){
           </span>
           ${item.contentType?`<span class="bc-ctype-badge"><i class="fa-solid fa-${item.contentType==='video'?'video':item.contentType==='carousel'?'layer-group':'circle-play'}"></i> ${esc(item.contentType)}</span>`:''}
           ${item.category?`<span class="bc-cat-badge"><i class="fa-solid fa-tag"></i> ${esc(item.category)}</span>`:''}
-          ${item.isDuplicate?`<span class="bc-dup-badge"><i class="fa-solid fa-copy"></i> Duplicate</span>`:''}
+          ${item.postStatus==='posted'?`<span class="bc-dup-badge" style="background:#e6f9f0;color:var(--success-green);border-color:var(--success-green)"><i class="fa-solid fa-circle-check"></i> Posted</span>`
+            :item.postStatus==='created'?`<span class="bc-dup-badge" style="background:var(--info-light);color:var(--info-blue);border-color:var(--info-blue)"><i class="fa-solid fa-pen-ruler"></i> Created</span>`
+            :''}
         </div>
         ${item.note?`<div class="bc-note">${esc(item.note)}</div>`:''}
       </div>
@@ -2113,7 +2115,7 @@ async function fetchOembedThumb(url, platform){
 
 function openBankModal(id){
   const item = id ? ideaBank.find(x=>x.id===id) : null;
-  const it = item||{url:'',title:'',platform:'',category:'',note:'',contentType:'',isDuplicate:false,thumbnail:''};
+  const it = item||{url:'',title:'',platform:'',category:'',note:'',contentType:'',postStatus:'',thumbnail:''};
   document.getElementById('bankModalTitle').textContent = item ? 'Edit Inspo' : 'Add Inspo';
   const platOpts = ['','instagram','tiktok','youtube'].map(o=>
     `<option value="${esc(o)}" ${o===it.platform?'selected':''}>${o||'— detect from URL —'}</option>`).join('');
@@ -2146,19 +2148,32 @@ function openBankModal(id){
       <div class="form-group"><label><i class="fa-solid fa-tag"></i> Category <span class="opt">(opt.)</span></label>
         <select id="bk-cat">${catOpts}</select></div>
     </div>
-    <div class="form-group" id="bk-thumb-upload-wrap" style="display:${(it.platform==='tiktok'&&it.contentType&&it.contentType!=='video')||(!it.contentType&&it.platform==='tiktok')?'block':'none'}">
-      <label><i class="fa-solid fa-image"></i> Thumbnail Image <span class="opt">(for carousel/story)</span></label>
+    <div class="form-group" id="bk-thumb-upload-wrap" style="display:${(it.platform==='tiktok'&&it.contentType&&it.contentType!=='video')?'block':'none'}">
+      <label><i class="fa-solid fa-image"></i> Thumbnail <span class="opt">(for carousel/story)</span></label>
+      <input type="url" id="bk-thumb-url" value="${esc(!it.thumbnail||it.thumbnail.startsWith('data:')?'':it.thumbnail)}" placeholder="https://… paste image URL">
+      <div style="display:flex;align-items:center;gap:.5rem;margin:.35rem 0;font-size:.72rem;color:var(--gray-400)">
+        <span style="flex:1;height:1px;background:var(--border-light)"></span> or <span style="flex:1;height:1px;background:var(--border-light)"></span>
+      </div>
       <input type="file" id="bk-thumb-file" accept="image/*">
       ${it.thumbnail?`<div style="margin-top:.4rem"><img src="${esc(it.thumbnail)}" style="max-height:80px;max-width:100%;object-fit:cover;border:var(--border-width) solid var(--border-light)"></div>`:''}
-      <span class="form-hint">Upload a cover image for TikTok carousels or story posts.</span>
+      <span class="form-hint">Paste a direct image URL or upload a file. URL takes priority if both are filled.</span>
     </div>
     <div class="form-group">
-      <label style="display:inline-flex;align-items:center;gap:.6rem;cursor:pointer">
-        <input type="checkbox" id="bk-dup" ${it.isDuplicate?'checked':''}
-          style="width:15px;height:15px;accent-color:var(--warning-orange)">
-        <span><i class="fa-solid fa-copy" style="color:var(--warning-orange)"></i> Mark as duplicate</span>
-      </label>
-      <span class="form-hint">Check if this idea already exists as another inspo in the bank.</span>
+      <label><i class="fa-solid fa-circle-dot"></i> Post Status</label>
+      <div id="bk-status-wrap" style="display:flex;gap:.4rem;flex-wrap:wrap">
+        ${[['','Not Created','fa-hourglass-start','var(--gray-400)','var(--border-light)'],
+           ['created','Created','fa-pen-ruler','var(--info-blue)','var(--info-blue)'],
+           ['posted','Posted','fa-circle-check','var(--success-green)','var(--success-green)']].map(([val,label,icon,col,bcol])=>`
+          <label style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer;
+            font-size:.78rem;font-weight:600;padding:.35rem .7rem;
+            border:var(--border-width) solid ${it.postStatus===val?bcol:'var(--border-light)'};
+            background:${it.postStatus===val?col:'var(--putih-coway)'};
+            color:${it.postStatus===val?'#fff':'var(--slate-700)'};transition:all .15s">
+            <input type="radio" name="bk-pstatus" value="${val}" ${it.postStatus===val?'checked':''}
+              style="display:none">
+            <i class="fa-solid ${icon}"></i> ${label}
+          </label>`).join('')}
+      </div>
     </div>
     <div class="form-group"><label><i class="fa-solid fa-note-sticky"></i> Note <span class="opt">(opt.)</span></label>
       <textarea id="bk-note" placeholder="What caught your eye? Style, idea, format…">${esc(it.note)}</textarea></div>`;
@@ -2175,12 +2190,25 @@ function openBankModal(id){
   document.getElementById('bk-platform').addEventListener('change', updateThumbUploadVisibility);
   document.getElementById('bk-ctype-wrap').addEventListener('change', updateThumbUploadVisibility);
 
-  // Style radio buttons on change
-  document.getElementById('bk-ctype-wrap').addEventListener('change', e=>{
+  // Style content type radio buttons on change
+  document.getElementById('bk-ctype-wrap').addEventListener('change', ()=>{
     document.querySelectorAll('#bk-ctype-wrap label').forEach(l=>{
       const inp = l.querySelector('input');
       l.style.background = inp.checked?'var(--primary-accent)':'var(--putih-coway)';
       l.style.color = inp.checked?'#fff':'var(--slate-700)';
+      l.style.borderColor = inp.checked?'var(--primary-accent)':'var(--border-light)';
+    });
+  });
+
+  // Style post status radio buttons on change
+  const statusColors = {'':{bg:'var(--gray-400)',bc:'var(--border-light)'},created:{bg:'var(--info-blue)',bc:'var(--info-blue)'},posted:{bg:'var(--success-green)',bc:'var(--success-green)'}};
+  document.getElementById('bk-status-wrap').addEventListener('change', ()=>{
+    document.querySelectorAll('#bk-status-wrap label').forEach(l=>{
+      const inp = l.querySelector('input');
+      const c = statusColors[inp.value]||statusColors[''];
+      l.style.background = inp.checked?c.bg:'var(--putih-coway)';
+      l.style.color = inp.checked?'#fff':'var(--slate-700)';
+      l.style.borderColor = inp.checked?c.bc:'var(--border-light)';
     });
   });
 
@@ -2205,18 +2233,20 @@ function openBankModal(id){
       else if(/youtube\.com|youtu\.be/.test(url)) platform='youtube';
     }
     const contentType = document.querySelector('input[name="bk-ctype"]:checked')?.value||'';
-    const isDuplicate = document.getElementById('bk-dup').checked;
+    const postStatus = document.querySelector('input[name="bk-pstatus"]:checked')?.value||'';
 
     const saveBtn = document.getElementById('bank-save');
     const origHtml = saveBtn.innerHTML;
     saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
     saveBtn.disabled = true;
 
-    // Fetch/keep thumbnail
+    // Resolve thumbnail: URL input > file upload > oEmbed fetch
     let thumbnail = item?.thumbnail || '';
-    // Check for uploaded image file first (TikTok carousel/story)
+    const thumbUrlInput = (document.getElementById('bk-thumb-url')?.value||'').trim();
     const fileInput = document.getElementById('bk-thumb-file');
-    if(fileInput?.files?.length){
+    if(thumbUrlInput){
+      thumbnail = thumbUrlInput;
+    } else if(fileInput?.files?.length){
       thumbnail = await new Promise(res=>{
         const r = new FileReader();
         r.onload = e=>res(e.target.result);
@@ -2236,7 +2266,7 @@ function openBankModal(id){
       category: document.getElementById('bk-cat').value,
       note: document.getElementById('bk-note').value.trim(),
       contentType,
-      isDuplicate,
+      postStatus,
       thumbnail,
     };
     if(item){Object.assign(item,data)}else{ideaBank.unshift({id:'b_'+Date.now(),...data})}
