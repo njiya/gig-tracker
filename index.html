@@ -755,6 +755,46 @@ textarea{resize:vertical;min-height:3.5rem}
 .pg-stat span i{font-size:.65rem}
 @media(max-width:700px){.pg-stats.c4{grid-template-columns:repeat(2,1fr)}}
 
+/* ---- task status pill ---- */
+.td-status{display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .5rem;
+  font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  border:var(--border-width) solid transparent;cursor:pointer;white-space:nowrap}
+.td-status i{font-size:.6rem}
+.td-status:hover{filter:brightness(.94)}
+
+/* ---- progress bar ---- */
+.td-prog{display:flex;align-items:center;gap:.45rem;margin-top:.4rem}
+.td-prog-track{flex:1;height:5px;background:var(--gray-100);
+  border:var(--border-width) solid var(--border-light);max-width:190px}
+.td-prog-fill{height:100%;background:var(--success-green);transition:width var(--transition-speed)}
+.td-prog-num{font-size:.66rem;font-weight:700;color:var(--slate-700);letter-spacing:.03em}
+
+/* ---- subtasks ---- */
+.td-subs{margin-top:.45rem;border-left:2px solid var(--border-light);padding-left:.6rem}
+.td-sub{display:flex;align-items:center;gap:.5rem;padding:.22rem 0;font-size:.78rem}
+.td-sub-check{width:13px;height:13px;flex:0 0 auto;border:2px solid var(--border-light);
+  background:var(--putih-coway);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;color:var(--putih-coway);font-size:.5rem}
+.td-sub-check:hover{border-color:var(--primary-accent)}
+.td-sub-check.on{background:var(--success-green);border-color:var(--success-green)}
+.td-sub-text{flex:1;color:var(--slate-900);min-width:0}
+.td-sub.done .td-sub-text{text-decoration:line-through;color:var(--gray-400)}
+.td-sub-del{color:var(--border-light);cursor:pointer;font-size:.68rem;flex:0 0 auto}
+.td-sub-del:hover{color:var(--error-red)}
+.td-sub-add{display:flex;gap:.4rem;margin-top:.35rem}
+.td-sub-add input{flex:1;padding:.3rem .5rem;font-size:.75rem}
+.td-sub-add button{padding:.3rem .6rem;font-size:.68rem}
+.td-toggle-subs{font-size:.68rem;font-weight:600;color:var(--primary-accent);
+  cursor:pointer;margin-top:.35rem;display:inline-flex;align-items:center;gap:.3rem}
+.td-toggle-subs:hover{text-decoration:underline}
+
+/* subtask editor inside the modal */
+.tm-sub-row{display:flex;align-items:center;gap:.5rem;padding:.35rem .5rem;
+  border:var(--border-width) solid var(--border-light);margin-bottom:.3rem;
+  background:var(--putih-coway)}
+.tm-sub-row input[type=text]{flex:1;border:none;padding:.15rem;font-size:.82rem}
+.tm-sub-row input[type=text]:focus{background:var(--light-wash-blue)}
+
 /* ======== 13. RESPONSIVE ======== */
 @media(max-width:1080px){
   .board{grid-template-columns:repeat(2,1fr)}
@@ -2453,6 +2493,38 @@ const TD_SECTIONS = [
   {id:'social', label:'Social media',    icon:'fa-clapperboard',color:'var(--accent-purple)'},
   {id:'growth', label:'Personal growth', icon:'fa-seedling',    color:'var(--teal-accent)'},
 ];
+const TD_STATUS = [
+  {id:'notstarted', label:'Not Started', icon:'fa-circle',          bg:'var(--gray-100)',      fg:'var(--slate-700)',   bd:'var(--border-light)'},
+  {id:'inprogress', label:'In Progress', icon:'fa-spinner',         bg:'var(--warning-light)', fg:'var(--amber-gold)',  bd:'var(--warning-orange)'},
+  {id:'completed',  label:'Completed',   icon:'fa-circle-check',    bg:'var(--success-light)', fg:'var(--success-dark)',bd:'var(--success-green)'},
+  {id:'cancelled',  label:'Cancelled',   icon:'fa-circle-xmark',    bg:'var(--error-light)',   fg:'var(--error-red)',   bd:'var(--error-red)'},
+  {id:'archived',   label:'Archived',    icon:'fa-box-archive',     bg:'var(--gray-100)',      fg:'var(--gray-400)',    bd:'var(--border-light)'},
+];
+const tdStat = id => TD_STATUS.find(s=>s.id===id) || TD_STATUS[0];
+/* status <-> done stay in sync so existing logic keeps working */
+function tdStatusOf(t){
+  if(t.status) return t.status;
+  return t.done ? 'completed' : 'notstarted';
+}
+function tdSetStatus(t, id){
+  t.status = id;
+  t.done = (id==='completed');
+  if(id==='completed') (t.subs||[]).forEach(s=>s.done=true);
+}
+function tdCycleStatus(t){
+  const order = TD_STATUS.map(s=>s.id);
+  const i = order.indexOf(tdStatusOf(t));
+  tdSetStatus(t, order[(i+1)%order.length]);
+}
+function tdProgress(t){
+  const subs = t.subs||[];
+  if(!subs.length) return null;
+  const done = subs.filter(s=>s.done).length;
+  return {done, total:subs.length, pct:Math.round(done/subs.length*100)};
+}
+/* a task counts as finished if status says so */
+const tdIsDone = t => ['completed','cancelled','archived'].includes(tdStatusOf(t));
+
 const TD_PRI = {
   high:   ['var(--error-light)','var(--error-red)','var(--error-red)'],
   normal: ['var(--gray-100)','var(--slate-700)','var(--border-light)'],
@@ -2460,6 +2532,7 @@ const TD_PRI = {
 };
 const TD_CACHE_KEY = 'sidegig_todo_cache';
 let todos = [], tdSection = 'main';
+const tdOpenSubs = new Set();
 
 async function loadTodo(){
   let raw = null;
@@ -2505,7 +2578,7 @@ function renderTodo(){
   renderTodoToday();
   // tabs
   document.getElementById('td-tabs').innerHTML = TD_SECTIONS.map(s=>{
-    const open = todos.filter(t=>t.section===s.id && !t.done).length;
+    const open = todos.filter(t=>t.section===s.id && !tdIsDone(t)).length;
     const on = s.id===tdSection;
     return `<button data-td-tab="${s.id}" class="${on?'on':''}"
       style="color:${on?s.color:'var(--slate-700)'}">
@@ -2514,16 +2587,17 @@ function renderTodo(){
   }).join('');
   // stats for the active section
   const list = todos.filter(t=>t.section===tdSection);
-  const open = list.filter(t=>!t.done).length;
-  const overdue = list.filter(t=>!t.done && t.due && tdDueInfo(t.due) && tdDueInfo(t.due).urg==='overdue').length;
-  const done = list.filter(t=>t.done).length;
+  const open = list.filter(t=>!tdIsDone(t)).length;
+  const overdue = list.filter(t=>!tdIsDone(t) && t.due && tdDueInfo(t.due) && tdDueInfo(t.due).urg==='overdue').length;
+  const done = list.filter(t=>tdStatusOf(t)==='completed').length;
   document.getElementById('td-stats').innerHTML =
     `<div class="pg-stat"><b style="color:${tdSec(tdSection).color}">${open}</b><span><i class="fa-solid fa-circle-dot"></i> Open</span></div>
      <div class="pg-stat"><b style="color:var(--error-red)">${overdue}</b><span><i class="fa-solid fa-triangle-exclamation"></i> Overdue</span></div>
      <div class="pg-stat"><b style="color:var(--success-green)">${done}</b><span><i class="fa-solid fa-circle-check"></i> Done</span></div>`;
   // task list — open first (by due date), then done
   const sorted = list.slice().sort((a,b)=>{
-    if(a.done!==b.done) return a.done?1:-1;
+    const ad=tdIsDone(a), bd=tdIsDone(b);
+    if(ad!==bd) return ad?1:-1;
     if(a.due&&b.due) return a.due.localeCompare(b.due);
     if(a.due) return -1; if(b.due) return 1;
     return (b.added||0)-(a.added||0);
@@ -2535,12 +2609,17 @@ function renderTodo(){
   }
   el.innerHTML = sorted.map(t=>{
     const pri = TD_PRI[t.priority]||TD_PRI.normal;
+    const st = tdStat(tdStatusOf(t));
+    const fin = tdIsDone(t);
     const due = tdDueInfo(t.due);
-    const dueBadge = due && !t.done
+    const dueBadge = due && !fin
       ? (([bg,fg])=>`<span class="badge" style="background:${bg};color:${fg};border-color:${fg}"><i class="fa-solid fa-calendar-day"></i> ${esc(due.rel)}</span>`)(tdDueStyle(due.urg))
       : '';
-    const priBadge = t.priority==='high' && !t.done
+    const priBadge = t.priority==='high' && !fin
       ? `<span class="badge" style="background:${pri[0]};color:${pri[1]};border-color:${pri[2]}"><i class="fa-solid fa-flag"></i> High</span>` : '';
+    const statusPill = `<span class="td-status" data-td-status="${t.id}" title="Click to change status"
+      style="background:${st.bg};color:${st.fg};border-color:${st.bd}">
+      <i class="fa-solid ${st.icon}"></i> ${esc(st.label)}</span>`;
     const atts = (t.atts||[]).filter(Boolean);
     const imgs = atts.filter(isImgUrl);
     const files = atts.filter(a=>!isImgUrl(a));
@@ -2550,15 +2629,35 @@ function renderTodo(){
     const imgHtml = imgs.length ? `<div class="td-thumbs">${imgs.map(a=>`
         <img src="${esc(tidyUrl(a))}" alt="" loading="lazy"
              onclick="event.stopPropagation();window.open('${esc(tidyUrl(a))}','_blank')">`).join('')}</div>` : '';
-    return `<div class="td-item${t.done?' done':''}">
-      <span class="td-pri" style="background:${t.done?'var(--border-light)':pri[1]}"></span>
+    // progress + subtasks
+    const pg = tdProgress(t);
+    const progHtml = pg ? `<div class="td-prog">
+        <div class="td-prog-track"><div class="td-prog-fill" style="width:${pg.pct}%"></div></div>
+        <span class="td-prog-num">${pg.pct}% · ${pg.done}/${pg.total}</span></div>` : '';
+    const openSubs = tdOpenSubs.has(t.id);
+    const subsHtml = openSubs ? `<div class="td-subs">
+        ${(t.subs||[]).map(s=>`<div class="td-sub${s.done?' done':''}">
+          <span class="td-sub-check${s.done?' on':''}" data-td-sub="${t.id}|${s.id}"><i class="fa-solid fa-check"></i></span>
+          <span class="td-sub-text">${esc(s.text)}</span>
+          <span class="td-sub-del" data-td-subdel="${t.id}|${s.id}"><i class="fa-solid fa-xmark"></i></span>
+        </div>`).join('')}
+        <div class="td-sub-add">
+          <input type="text" placeholder="Add subtask…" data-td-subinput="${t.id}">
+          <button class="btn btn-outline" data-td-subadd="${t.id}"><i class="fa-solid fa-plus"></i></button>
+        </div></div>` : '';
+    const subCount = (t.subs||[]).length;
+    const toggleSubs = `<span class="td-toggle-subs" data-td-subs="${t.id}">
+        <i class="fa-solid fa-${openSubs?'chevron-down':'chevron-right'}"></i>
+        ${subCount?`${subCount} subtask${subCount>1?'s':''}`:'Add subtask'}</span>`;
+    return `<div class="td-item${fin?' done':''}">
+      <span class="td-pri" style="background:${fin?'var(--border-light)':pri[1]}"></span>
       <span class="td-check${t.done?' on':''}" data-td-toggle="${t.id}"><i class="fa-solid fa-check"></i></span>
-      <div class="td-body" data-td-edit="${t.id}">
-        <div class="td-text">${esc(t.text)}</div>
+      <div class="td-body">
+        <div class="td-text" data-td-edit="${t.id}">${esc(t.text)}</div>
         ${t.note?`<div class="td-note">${esc(t.note)}</div>`:''}
-        ${imgHtml}${attHtml}
+        ${progHtml}${imgHtml}${attHtml}${toggleSubs}${subsHtml}
       </div>
-      <div class="td-meta">${priBadge}${dueBadge}</div>
+      <div class="td-meta">${statusPill}${priBadge}${dueBadge}</div>
       <span class="td-edit" data-td-edit="${t.id}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></span>
       <span class="td-del" data-td-del="${t.id}" title="Delete"><i class="fa-solid fa-trash-can"></i></span>
     </div>`;
@@ -2568,7 +2667,7 @@ function renderTodo(){
 function renderTodoToday(){
   const el = document.getElementById('td-today');
   const focus = todos.filter(t=>{
-    if(t.done || !t.due) return false;
+    if(tdIsDone(t) || !t.due) return false;
     const d = tdDueInfo(t.due);
     return d && (d.urg==='overdue' || d.urg==='today');
   }).sort((a,b)=>a.due.localeCompare(b.due));
@@ -2614,6 +2713,9 @@ function openTodoModal(id){
     `<option value="${s.id}"${s.id===t.section?' selected':''}>${esc(s.label)}</option>`).join('');
   const priOpts = ['high','normal','low'].map(p=>
     `<option value="${p}"${p===(t.priority||'normal')?' selected':''}>${p[0].toUpperCase()+p.slice(1)}</option>`).join('');
+  const curStat = tdStatusOf(t);
+  const statOpts = TD_STATUS.map(s=>
+    `<option value="${s.id}"${s.id===curStat?' selected':''}>${esc(s.label)}</option>`).join('');
   const body = document.getElementById('todoModalBody');
   body.innerHTML = `
     <div class="form-group"><label><i class="fa-solid fa-pen"></i> Task</label>
@@ -2626,12 +2728,56 @@ function openTodoModal(id){
       <div class="form-group"><label><i class="fa-solid fa-flag"></i> Priority</label>
         <select id="tm-pri">${priOpts}</select></div>
     </div>
+    <div class="form-group"><label><i class="fa-solid fa-list-check"></i> Status</label>
+      <select id="tm-status">${statOpts}</select></div>
+    <div class="form-group">
+      <label><i class="fa-solid fa-diagram-project"></i> Subtasks <span class="opt">(progress is calculated from these)</span></label>
+      <div id="tm-subs"></div>
+      <div class="td-sub-add">
+        <input type="text" id="tm-sub-new" placeholder="Add subtask…">
+        <button class="btn btn-outline" id="tm-sub-add"><i class="fa-solid fa-plus"></i> Add</button>
+      </div>
+    </div>
     <div class="form-group"><label><i class="fa-solid fa-calendar-day"></i> Deadline <span class="opt">(optional)</span></label>
       <input type="date" id="tm-due" value="${esc(t.due||'')}"></div>
     <div class="form-group">
       <label><i class="fa-solid fa-paperclip"></i> Attachments <span class="opt">(one link per line — image, PDF, Drive, any URL)</span></label>
       <textarea id="tm-atts" placeholder="https://drive.google.com/…&#10;https://…/brief.pdf&#10;https://…/shot.jpg">${esc((t.atts||[]).join('\n'))}</textarea>
       <span class="form-hint">Image links render as thumbnails; everything else shows as a labelled chip.</span></div>`;
+  // working copy of subtasks so Cancel discards changes
+  let draftSubs = (t.subs||[]).map(s=>({...s}));
+  const paintSubs = ()=>{
+    const box = body.querySelector('#tm-subs');
+    box.innerHTML = draftSubs.length ? draftSubs.map((s,i)=>`
+      <div class="tm-sub-row">
+        <span class="td-sub-check${s.done?' on':''}" data-ms-check="${i}"><i class="fa-solid fa-check"></i></span>
+        <input type="text" value="${esc(s.text)}" data-ms-text="${i}">
+        <span class="td-sub-del" data-ms-del="${i}"><i class="fa-solid fa-xmark"></i></span>
+      </div>`).join('')
+      : `<div style="font-size:.75rem;color:var(--gray-400);padding:.25rem 0">No subtasks yet.</div>`;
+  };
+  paintSubs();
+  body.querySelector('#tm-subs').addEventListener('click',ev=>{
+    const c = ev.target.closest('[data-ms-check]');
+    if(c){ draftSubs[+c.dataset.msCheck].done = !draftSubs[+c.dataset.msCheck].done; paintSubs(); return }
+    const d = ev.target.closest('[data-ms-del]');
+    if(d){ draftSubs.splice(+d.dataset.msDel,1); paintSubs() }
+  });
+  body.querySelector('#tm-subs').addEventListener('input',ev=>{
+    const i = ev.target.dataset.msText;
+    if(i!==undefined) draftSubs[+i].text = ev.target.value;
+  });
+  const addSub = ()=>{
+    const inp = body.querySelector('#tm-sub-new');
+    const v = inp.value.trim(); if(!v) return;
+    draftSubs.push({id:'s_'+Date.now()+'_'+draftSubs.length, text:v, done:false});
+    inp.value=''; paintSubs(); inp.focus();
+  };
+  body.querySelector('#tm-sub-add').onclick = addSub;
+  body.querySelector('#tm-sub-new').addEventListener('keydown',ev=>{
+    if(ev.key==='Enter'){ ev.preventDefault(); addSub() }
+  });
+
   showTodoModal(true);
   body.querySelector('#tm-text').focus();
   document.getElementById('todo-save').onclick = ()=>{
@@ -2643,6 +2789,8 @@ function openTodoModal(id){
     t.priority = body.querySelector('#tm-pri').value;
     t.due = body.querySelector('#tm-due').value;
     t.atts = body.querySelector('#tm-atts').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    t.subs = draftSubs.filter(s=>s.text.trim()).map(s=>({...s, text:s.text.trim()}));
+    tdSetStatus(t, body.querySelector('#tm-status').value);
     saveTodo(); renderTodo(); showTodoModal(false);
   };
 }
@@ -2653,6 +2801,23 @@ document.getElementById('todoModal').addEventListener('click',e=>{
   if(e.target.id==='todoModal') showTodoModal(false);
 });
 
+function tdAddSub(tid){
+  const inp = document.querySelector(`[data-td-subinput="${tid}"]`);
+  if(!inp) return;
+  const text = inp.value.trim(); if(!text) return;
+  const t = todos.find(x=>x.id===tid); if(!t) return;
+  t.subs = t.subs||[];
+  t.subs.push({id:'s_'+Date.now(), text, done:false});
+  if(tdStatusOf(t)==='notstarted') tdSetStatus(t,'inprogress');
+  saveTodo(); renderTodo();
+  const again = document.querySelector(`[data-td-subinput="${tid}"]`);
+  if(again) again.focus();
+}
+document.getElementById('todo-panel').addEventListener('keydown',e=>{
+  const inp = e.target.closest('[data-td-subinput]');
+  if(inp && e.key==='Enter'){ e.preventDefault(); tdAddSub(inp.dataset.tdSubinput) }
+});
+
 function tdAdd(){
   const inp = document.getElementById('td-new');
   const text = inp.value.trim();
@@ -2661,7 +2826,7 @@ function tdAdd(){
     id:'td_'+Date.now(), text, section:tdSection,
     priority:document.getElementById('td-new-pri').value,
     due:document.getElementById('td-new-due').value,
-    note:'', atts:[], done:false, added:Date.now()
+    note:'', atts:[], subs:[], status:'notstarted', done:false, added:Date.now()
   });
   inp.value=''; document.getElementById('td-new-due').value='';
   document.getElementById('td-new-pri').value='normal';
@@ -2678,9 +2843,50 @@ document.getElementById('todo-panel').addEventListener('click',e=>{
   const tg = e.target.closest('[data-td-toggle]');
   if(tg){
     const t = todos.find(x=>x.id===tg.dataset.tdToggle);
-    if(t){ t.done=!t.done; saveTodo(); renderTodo() }
+    if(t){ tdSetStatus(t, tdStatusOf(t)==='completed' ? 'notstarted' : 'completed');
+      saveTodo(); renderTodo() }
     return;
   }
+  const stp = e.target.closest('[data-td-status]');
+  if(stp){
+    const t = todos.find(x=>x.id===stp.dataset.tdStatus);
+    if(t){ tdCycleStatus(t); saveTodo(); renderTodo() }
+    return;
+  }
+  const sx = e.target.closest('[data-td-subs]');
+  if(sx){
+    const id = sx.dataset.tdSubs;
+    tdOpenSubs.has(id) ? tdOpenSubs.delete(id) : tdOpenSubs.add(id);
+    renderTodo();
+    return;
+  }
+  const sc = e.target.closest('[data-td-sub]');
+  if(sc){
+    const [tid,sid] = sc.dataset.tdSub.split('|');
+    const t = todos.find(x=>x.id===tid);
+    const s = t && (t.subs||[]).find(x=>x.id===sid);
+    if(s){
+      s.done = !s.done;
+      // auto-advance parent status from subtask progress
+      const pg = tdProgress(t);
+      if(pg){
+        if(pg.pct===100) tdSetStatus(t,'completed');
+        else if(tdStatusOf(t)==='completed') tdSetStatus(t,'inprogress');
+        else if(pg.done>0 && tdStatusOf(t)==='notstarted') tdSetStatus(t,'inprogress');
+      }
+      saveTodo(); renderTodo();
+    }
+    return;
+  }
+  const sd = e.target.closest('[data-td-subdel]');
+  if(sd){
+    const [tid,sid] = sd.dataset.tdSubdel.split('|');
+    const t = todos.find(x=>x.id===tid);
+    if(t){ t.subs = (t.subs||[]).filter(x=>x.id!==sid); saveTodo(); renderTodo() }
+    return;
+  }
+  const sa = e.target.closest('[data-td-subadd]');
+  if(sa){ tdAddSub(sa.dataset.tdSubadd); return }
   const ed = e.target.closest('[data-td-edit]');
   if(ed){ openTodoModal(ed.dataset.tdEdit); return }
   const dl = e.target.closest('[data-td-del]');
