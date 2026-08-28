@@ -576,28 +576,33 @@ textarea{resize:vertical;min-height:3.5rem}
 .bc-thumb-loading{position:absolute;inset:0;display:flex;align-items:center;
   justify-content:center;color:var(--gray-400);font-size:.75rem;gap:.35rem}
 
-/* Card body */
-.bc-body{padding:.5rem;display:flex;flex-direction:column;gap:.3rem}
+/* Badge overlay on thumbnail */
+.bc-thumb-badges{position:absolute;inset:0;pointer-events:none;
+  display:flex;flex-direction:column;justify-content:space-between;padding:.3rem}
+.bc-thumb-badges-top,.bc-thumb-badges-bot{display:flex;gap:.2rem;flex-wrap:wrap}
+.bc-thumb-badges-bot{align-self:flex-end;align-items:flex-end}
 .bc-title{font-size:.72rem;font-weight:600;color:var(--slate-900);line-height:1.35;
   letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   overflow:hidden;min-height:1.9em}
 .bc-meta{display:flex;align-items:center;gap:.25rem;flex-wrap:wrap}
 .bc-plat-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.08rem .3rem;
   font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
-  border:var(--border-width) solid transparent}
+  border:var(--border-width) solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .bc-plat-ig{background:#FEF0FF;color:var(--ig-purple);border-color:#E8A0D0}
 .bc-plat-tt{background:#F0F0F0;color:#333;border-color:#999}
 .bc-plat-yt{background:#FFF0F0;color:#C00;border-color:#FFAAAA}
 .bc-cat-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.08rem .3rem;
   font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em;
   background:var(--purple-light);color:var(--accent-purple);
-  border:var(--border-width) solid var(--accent-purple)}
+  border:var(--border-width) solid var(--accent-purple);box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .bc-ctype-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.08rem .3rem;
   font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
-  background:var(--light-wash-blue);color:var(--info-blue);border:var(--border-width) solid var(--info-blue)}
+  background:var(--light-wash-blue);color:var(--info-blue);border:var(--border-width) solid var(--info-blue);
+  box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .bc-dup-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.08rem .3rem;
   font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
-  background:var(--warning-light);color:var(--warning-orange);border:var(--border-width) solid var(--warning-orange)}
+  background:var(--warning-light);color:var(--warning-orange);border:var(--border-width) solid var(--warning-orange);
+  box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .bc-note{font-size:.7rem;color:var(--slate-700);line-height:1.35;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
@@ -2051,22 +2056,28 @@ function renderBank(){
     </div>`;
     return;
   }
-  grid.innerHTML = list.map(item=>`
-    <div class="bank-card ${getBankPlatClass(item.platform)}">
+  grid.innerHTML = list.map(item=>{
+    const platBadge = `<span class="bc-plat-badge ${getBankPlatBadgeClass(item.platform)}">
+      <i class="${getBankPlatIcon(item.platform)}"></i> ${esc(item.platform||'—')}
+    </span>`;
+    const ctypeBadge = item.contentType?`<span class="bc-ctype-badge"><i class="fa-solid fa-${item.contentType==='video'?'video':item.contentType==='carousel'?'layer-group':'circle-play'}"></i> ${esc(item.contentType)}</span>`:'';
+    const catBadge = item.category?`<span class="bc-cat-badge"><i class="fa-solid fa-tag"></i> ${esc(item.category)}</span>`:'';
+    const statusBadge = item.postStatus==='posted'
+      ?`<span class="bc-dup-badge" style="background:#e6f9f0;color:var(--success-green);border-color:var(--success-green)"><i class="fa-solid fa-circle-check"></i> Posted</span>`
+      :item.postStatus==='created'
+      ?`<span class="bc-dup-badge" style="background:var(--info-light);color:var(--info-blue);border-color:var(--info-blue)"><i class="fa-solid fa-pen-ruler"></i> Created</span>`
+      :'';
+    return `<div class="bank-card ${getBankPlatClass(item.platform)}">
       <div class="bc-stripe"></div>
-      ${buildThumbHtml(item)}
+      <div style="position:relative">
+        ${buildThumbHtml(item)}
+        <div class="bc-thumb-badges">
+          <div class="bc-thumb-badges-top">${platBadge}${ctypeBadge}</div>
+          ${catBadge||statusBadge?`<div class="bc-thumb-badges-bot">${catBadge}${statusBadge}</div>`:''}
+        </div>
+      </div>
       <div class="bc-body">
         ${item.title?`<div class="bc-title">${esc(item.title)}</div>`:''}
-        <div class="bc-meta">
-          <span class="bc-plat-badge ${getBankPlatBadgeClass(item.platform)}">
-            <i class="${getBankPlatIcon(item.platform)}"></i> ${esc(item.platform||'—')}
-          </span>
-          ${item.contentType?`<span class="bc-ctype-badge"><i class="fa-solid fa-${item.contentType==='video'?'video':item.contentType==='carousel'?'layer-group':'circle-play'}"></i> ${esc(item.contentType)}</span>`:''}
-          ${item.category?`<span class="bc-cat-badge"><i class="fa-solid fa-tag"></i> ${esc(item.category)}</span>`:''}
-          ${item.postStatus==='posted'?`<span class="bc-dup-badge" style="background:#e6f9f0;color:var(--success-green);border-color:var(--success-green)"><i class="fa-solid fa-circle-check"></i> Posted</span>`
-            :item.postStatus==='created'?`<span class="bc-dup-badge" style="background:var(--info-light);color:var(--info-blue);border-color:var(--info-blue)"><i class="fa-solid fa-pen-ruler"></i> Created</span>`
-            :''}
-        </div>
         ${item.note?`<div class="bc-note">${esc(item.note)}</div>`:''}
       </div>
       <div class="bc-footer">
@@ -2077,7 +2088,8 @@ function renderBank(){
           <button class="bc-btn del" data-bank-del="${esc(item.id)}" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function shortUrl(u){
