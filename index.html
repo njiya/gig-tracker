@@ -65,19 +65,19 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 /* ======== 4. SIDEBAR NAV ======== */
 :root{ --sb-w:236px; --sb-w-collapsed:60px; }
 .app-shell{display:flex;min-height:100vh}
-.sidebar{width:var(--sb-w);flex:0 0 auto;background:var(--water-care-dark);
-  border-right:3px solid var(--primary-accent);position:sticky;top:0;height:100vh;
+.sidebar{width:var(--sb-w);flex:0 0 auto;background:#fff;
+  border-right:1px solid var(--border-light);position:sticky;top:0;height:100vh;
   display:flex;flex-direction:column;transition:width var(--transition-speed) ease;
   z-index:500;overflow:hidden}
 .sidebar.collapsed{width:var(--sb-w-collapsed)}
 .sb-brand{display:flex;align-items:center;gap:.6rem;padding:1rem .9rem;
-  border-bottom:var(--border-width) solid rgba(255,255,255,.12);min-height:58px}
+  border-bottom:var(--border-width) solid var(--border-light);min-height:58px}
 .sb-brand .logo{width:26px;height:26px;flex:0 0 auto;background:var(--primary-accent);
   color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem}
-.sb-brand .bt{color:#fff;font-weight:700;font-size:.9rem;letter-spacing:-.01em;white-space:nowrap}
-.sb-toggle{margin-left:auto;color:rgba(255,255,255,.75);font-size:.85rem;
+.sb-brand .bt{color:var(--slate-900);font-weight:700;font-size:.9rem;letter-spacing:-.01em;white-space:nowrap}
+.sb-toggle{margin-left:auto;color:var(--slate-700);font-size:.85rem;
   width:28px;height:28px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex:0 0 auto;border:var(--border-width) solid rgba(255,255,255,.25);
+  cursor:pointer;flex:0 0 auto;border:var(--border-width) solid var(--border-light);
   transition:all var(--transition-speed)}
 .sb-toggle:hover{color:#fff;background:var(--primary-accent);border-color:var(--primary-accent)}
 .sidebar.collapsed .sb-toggle{margin-left:0}
@@ -87,37 +87,37 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 .sb-nav{flex:1;padding:.6rem 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
 .sb-item{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;
-  font-size:.8rem;font-weight:600;letter-spacing:.03em;color:rgba(255,255,255,.62);
+  font-size:.8rem;font-weight:600;letter-spacing:.03em;color:var(--slate-700);
   border-left:3px solid transparent;cursor:pointer;white-space:nowrap;
   transition:all var(--transition-speed);width:100%;text-align:left}
 .sb-item i{font-size:.9rem;width:18px;flex:0 0 auto;text-align:center}
-.sb-item:hover{color:#fff;background:rgba(255,255,255,.07)}
-.sb-item.active{color:#fff;background:rgba(255,255,255,.1);border-left-color:var(--primary-accent)}
+.sb-item:hover{color:var(--primary-accent);background:var(--light-wash-blue)}
+.sb-item.active{color:var(--primary-accent);background:var(--light-wash-blue);border-left-color:var(--primary-accent)}
 .sidebar.collapsed .sb-item{justify-content:center;padding:.7rem .5rem;border-left-width:0;
   border-right:3px solid transparent}
 .sidebar.collapsed .sb-item.active{border-right-color:var(--primary-accent)}
 .sidebar.collapsed .sb-label{display:none}
 
 /* user block at the bottom */
-.sb-user{border-top:var(--border-width) solid rgba(255,255,255,.12);padding:.75rem .9rem;
+.sb-user{border-top:var(--border-width) solid var(--border-light);padding:.75rem .9rem;
   display:flex;align-items:center;gap:.6rem;position:relative}
 .sb-avatar{width:32px;height:32px;flex:0 0 auto;background:var(--primary-accent);
   color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;
   font-weight:700;overflow:hidden}
 .sb-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .sb-uinfo{min-width:0;flex:1}
-.sb-uname{color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap;
+.sb-uname{color:var(--slate-900);font-size:.8rem;font-weight:600;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
-.sb-umail{color:rgba(255,255,255,.5);font-size:.68rem;white-space:nowrap;
+.sb-umail{color:var(--slate-700);font-size:.68rem;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
-.sb-out{color:rgba(255,255,255,.5);font-size:.8rem;cursor:pointer;padding:.3rem;flex:0 0 auto}
+.sb-out{color:var(--gray-400);font-size:.8rem;cursor:pointer;padding:.3rem;flex:0 0 auto}
 .sb-out:hover{color:var(--error-red)}
 .sidebar.collapsed .sb-user{justify-content:center;padding:.75rem .5rem}
 .sidebar.collapsed .sb-uinfo,.sidebar.collapsed .sb-out{display:none}
 .sb-extra{padding:0 .9rem .75rem}
 .sb-extra button{width:100%;display:flex;align-items:center;gap:.5rem;
-  color:rgba(255,255,255,.5);font-size:.72rem;font-weight:600;padding:.45rem 0;cursor:pointer}
-.sb-extra button:hover{color:#fff}
+  color:var(--slate-700);font-size:.72rem;font-weight:600;padding:.45rem 0;cursor:pointer}
+.sb-extra button:hover{color:var(--primary-accent)}
 .sidebar.collapsed .sb-extra{display:none}
 
 .app-main{flex:1;min-width:0;overflow-x:hidden}
@@ -125,8 +125,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 /* mobile: sidebar becomes an overlay */
 .sb-scrim{display:none;position:fixed;inset:0;background:rgba(27,33,28,.5);z-index:499}
 .sb-mobile-btn{display:none;position:fixed;top:.75rem;left:.75rem;z-index:498;
-  background:var(--water-care-dark);color:#fff;padding:.55rem .7rem;font-size:.9rem;
-  border:var(--border-width) solid var(--primary-accent);cursor:pointer}
+  background:#fff;color:var(--primary-accent);padding:.55rem .7rem;font-size:.9rem;
+  border:var(--border-width) solid var(--border-light);cursor:pointer}
 @media(max-width:820px){
   .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);
     transition:transform var(--transition-speed) ease;width:var(--sb-w)}
@@ -2490,10 +2490,10 @@ document.getElementById('lockBtn').onclick = async ()=>{
    TO-DO
 ================================================================ */
 const TD_SECTIONS = [
-  {id:'main',   label:'Main job',        icon:'fa-briefcase',   color:'var(--info-blue)'},
-  {id:'side',   label:'Side job',        icon:'fa-coins',       color:'var(--success-dark)'},
-  {id:'social', label:'Social media',    icon:'fa-clapperboard',color:'var(--accent-purple)'},
-  {id:'growth', label:'Personal growth', icon:'fa-seedling',    color:'var(--teal-accent)'},
+  {id:'main',   label:'Main job',  icon:'fa-briefcase',   color:'var(--info-blue)'},
+  {id:'side',   label:'Side job',  icon:'fa-coins',       color:'var(--success-dark)'},
+  {id:'social', label:'Content',   icon:'fa-clapperboard',color:'var(--accent-purple)'},
+  {id:'growth', label:'Personal',  icon:'fa-seedling',    color:'var(--teal-accent)'},
 ];
 const TD_STATUS = [
   {id:'notstarted', label:'Not Started', icon:'fa-circle',          bg:'var(--gray-100)',      fg:'var(--slate-700)',   bd:'var(--border-light)'},
