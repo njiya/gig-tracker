@@ -709,21 +709,22 @@ textarea{resize:vertical;min-height:3.5rem}
 /* task rows */
 .td-list{display:flex;flex-direction:column;gap:var(--border-width);
   background:var(--border-light);border:var(--border-width) solid var(--border-light)}
-.td-item{background:var(--putih-coway);padding:.65rem .8rem;display:flex;align-items:center;
+.td-item{background:var(--putih-coway);padding:.65rem .8rem;display:flex;align-items:flex-start;
   gap:.65rem;transition:background var(--transition-speed)}
 .td-item:hover{background:var(--light-wash-blue)}
 .td-item.done{opacity:.55}
 .td-pri{width:3px;align-self:stretch;flex:0 0 auto}
 .td-check{width:16px;height:16px;flex:0 0 auto;border:2px solid var(--border-light);
   background:var(--putih-coway);cursor:pointer;display:flex;align-items:center;
-  justify-content:center;color:var(--putih-coway);font-size:.6rem}
+  justify-content:center;color:var(--putih-coway);font-size:.6rem;margin-top:.18rem}
 .td-check:hover{border-color:var(--primary-accent)}
 .td-check.on{background:var(--success-green);border-color:var(--success-green)}
 .td-body{flex:1;min-width:0}
+.td-title-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .td-text{font-size:.875rem;font-weight:500;color:var(--slate-900)}
 .td-item.done .td-text{text-decoration:line-through;color:var(--slate-700)}
 .td-note{font-size:.72rem;color:var(--slate-700);margin-top:.15rem}
-.td-meta{display:flex;gap:.375rem;align-items:center;flex:0 0 auto;flex-wrap:wrap}
+.td-meta{display:flex;gap:.375rem;align-items:center;flex:0 0 auto;flex-wrap:wrap;align-self:flex-start}
 .td-del{color:var(--gray-400);cursor:pointer;padding:.25rem;font-size:.8rem;flex:0 0 auto}
 .td-del:hover{color:var(--error-red)}
 .td-add-row{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
@@ -764,10 +765,11 @@ textarea{resize:vertical;min-height:3.5rem}
 .td-status:hover{filter:brightness(.94)}
 
 /* ---- progress bar ---- */
-.td-prog{margin-top:.4rem}
-.td-prog-track{height:5px;background:var(--gray-100);
-  border:var(--border-width) solid var(--border-light);max-width:190px}
+.td-prog{display:inline-flex;align-items:center;gap:.4rem;flex-shrink:0}
+.td-prog-track{width:80px;height:5px;background:var(--gray-100);
+  border:var(--border-width) solid var(--border-light);flex-shrink:0}
 .td-prog-fill{height:100%;background:var(--success-green);transition:width var(--transition-speed)}
+.td-prog-num{font-size:.68rem;font-weight:700;color:var(--slate-700);white-space:nowrap;letter-spacing:.02em}
 
 /* ---- subtasks ---- */
 .td-subs{margin-top:.45rem;border-left:2px solid var(--border-light);padding-left:.6rem}
@@ -2631,11 +2633,10 @@ function renderTodo(){
              onclick="event.stopPropagation();window.open('${esc(tidyUrl(a))}','_blank')">`).join('')}</div>` : '';
     // progress + subtasks
     const pg = tdProgress(t);
-    const progTrackHtml = pg ? `<div class="td-prog">
-        <div class="td-prog-track"><div class="td-prog-fill" style="width:${pg.pct}%"></div></div>
-        </div>` : '';
-    const progBadge = pg ? `<span class="badge" style="background:var(--gray-100);color:var(--slate-700);border-color:var(--border-light);font-variant-numeric:tabular-nums">
-        <i class="fa-solid fa-bars-progress" style="font-size:.55rem"></i> ${pg.pct}% · ${pg.done}/${pg.total}</span>` : '';
+    const progInline = pg ? `<span class="td-prog">
+        <span class="td-prog-track"><span class="td-prog-fill" style="width:${pg.pct}%"></span></span>
+        <span class="td-prog-num">${pg.pct}% · ${pg.done}/${pg.total}</span>
+      </span>` : '';
     const openSubs = tdOpenSubs.has(t.id);
     const subsHtml = openSubs ? `<div class="td-subs">
         ${(t.subs||[]).map(s=>`<div class="td-sub${s.done?' done':''}">
@@ -2655,11 +2656,14 @@ function renderTodo(){
       <span class="td-pri" style="background:${fin?'var(--border-light)':pri[1]}"></span>
       <span class="td-check${t.done?' on':''}" data-td-toggle="${t.id}"><i class="fa-solid fa-check"></i></span>
       <div class="td-body">
-        <div class="td-text" data-td-edit="${t.id}">${esc(t.text)}</div>
+        <div class="td-title-row">
+          <span class="td-text" data-td-edit="${t.id}">${esc(t.text)}</span>
+          ${progInline}
+        </div>
         ${t.note?`<div class="td-note">${esc(t.note)}</div>`:''}
-        ${progTrackHtml}${imgHtml}${attHtml}${toggleSubs}${subsHtml}
+        ${imgHtml}${attHtml}${toggleSubs}${subsHtml}
       </div>
-      <div class="td-meta">${statusPill}${progBadge}${priBadge}${dueBadge}</div>
+      <div class="td-meta">${statusPill}${priBadge}${dueBadge}</div>
       <span class="td-edit" data-td-edit="${t.id}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></span>
       <span class="td-del" data-td-del="${t.id}" title="Delete"><i class="fa-solid fa-trash-can"></i></span>
     </div>`;
