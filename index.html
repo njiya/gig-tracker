@@ -684,13 +684,14 @@ textarea{resize:vertical;min-height:3.5rem}
 .td-today{background:var(--light-wash-blue);border:var(--border-width) solid var(--primary-accent);
   padding:.875rem 1rem;margin-bottom:1.25rem}
 .td-today-h{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--water-care-dark);margin-bottom:.625rem;display:flex;align-items:center;gap:.4rem}
+  color:var(--water-care-dark);margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem}
 .td-today-h .n{margin-left:auto;background:var(--putih-coway);
   border:var(--border-width) solid var(--primary-accent);padding:0 .5rem;font-size:.7rem}
-.td-today-list{display:flex;flex-wrap:wrap;gap:.5rem}
+.td-today-groups{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start}
+.td-today-group{flex:1 1 220px;min-width:180px;max-width:340px}
 .td-chip{background:var(--putih-coway);border:var(--border-width) solid var(--border-light);
   padding:.4rem .6rem;font-size:.78rem;display:flex;align-items:center;gap:.5rem;cursor:pointer}
-.td-chip:hover{border-color:var(--primary-accent)}
+.td-chip:hover{border-color:var(--primary-accent);background:var(--putih-coway)}
 .td-empty-today{font-size:.8rem;color:var(--slate-700)}
 
 /* section tabs */
@@ -763,11 +764,10 @@ textarea{resize:vertical;min-height:3.5rem}
 .td-status:hover{filter:brightness(.94)}
 
 /* ---- progress bar ---- */
-.td-prog{display:flex;align-items:center;gap:.45rem;margin-top:.4rem}
-.td-prog-track{flex:1;height:5px;background:var(--gray-100);
+.td-prog{margin-top:.4rem}
+.td-prog-track{height:5px;background:var(--gray-100);
   border:var(--border-width) solid var(--border-light);max-width:190px}
 .td-prog-fill{height:100%;background:var(--success-green);transition:width var(--transition-speed)}
-.td-prog-num{font-size:.66rem;font-weight:700;color:var(--slate-700);letter-spacing:.03em}
 
 /* ---- subtasks ---- */
 .td-subs{margin-top:.45rem;border-left:2px solid var(--border-light);padding-left:.6rem}
@@ -2631,9 +2631,11 @@ function renderTodo(){
              onclick="event.stopPropagation();window.open('${esc(tidyUrl(a))}','_blank')">`).join('')}</div>` : '';
     // progress + subtasks
     const pg = tdProgress(t);
-    const progHtml = pg ? `<div class="td-prog">
+    const progTrackHtml = pg ? `<div class="td-prog">
         <div class="td-prog-track"><div class="td-prog-fill" style="width:${pg.pct}%"></div></div>
-        <span class="td-prog-num">${pg.pct}% · ${pg.done}/${pg.total}</span></div>` : '';
+        </div>` : '';
+    const progBadge = pg ? `<span class="badge" style="background:var(--gray-100);color:var(--slate-700);border-color:var(--border-light);font-variant-numeric:tabular-nums">
+        <i class="fa-solid fa-bars-progress" style="font-size:.55rem"></i> ${pg.pct}% · ${pg.done}/${pg.total}</span>` : '';
     const openSubs = tdOpenSubs.has(t.id);
     const subsHtml = openSubs ? `<div class="td-subs">
         ${(t.subs||[]).map(s=>`<div class="td-sub${s.done?' done':''}">
@@ -2655,9 +2657,9 @@ function renderTodo(){
       <div class="td-body">
         <div class="td-text" data-td-edit="${t.id}">${esc(t.text)}</div>
         ${t.note?`<div class="td-note">${esc(t.note)}</div>`:''}
-        ${progHtml}${imgHtml}${attHtml}${toggleSubs}${subsHtml}
+        ${progTrackHtml}${imgHtml}${attHtml}${toggleSubs}${subsHtml}
       </div>
-      <div class="td-meta">${statusPill}${priBadge}${dueBadge}</div>
+      <div class="td-meta">${statusPill}${progBadge}${priBadge}${dueBadge}</div>
       <span class="td-edit" data-td-edit="${t.id}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></span>
       <span class="td-del" data-td-del="${t.id}" title="Delete"><i class="fa-solid fa-trash-can"></i></span>
     </div>`;
@@ -2666,27 +2668,70 @@ function renderTodo(){
 
 function renderTodoToday(){
   const el = document.getElementById('td-today');
+
+  // All tasks that are due today or overdue and not done
   const focus = todos.filter(t=>{
     if(tdIsDone(t) || !t.due) return false;
     const d = tdDueInfo(t.due);
     return d && (d.urg==='overdue' || d.urg==='today');
   }).sort((a,b)=>a.due.localeCompare(b.due));
-  const head = `<div class="td-today-h"><i class="fa-solid fa-fire"></i> Today's focus
-    <span class="n">${focus.length}</span></div>`;
-  if(!focus.length){
+
+  const totalCount = focus.length;
+  const head = `<div class="td-today-h"><i class="fa-solid fa-fire"></i> Today's Focus
+    <span class="n">${totalCount}</span></div>`;
+
+  if(!totalCount){
     el.innerHTML = head + `<div class="td-empty-today">Nothing due today. Anything overdue or due today shows up here.</div>`;
     return;
   }
-  el.innerHTML = head + `<div class="td-today-list">${focus.map(t=>{
-    const s = tdSec(t.section); const d = tdDueInfo(t.due);
-    const late = d.urg==='overdue';
+
+  // Define which sections are "job types" (always shown if tasks exist)
+  // vs "optional" (only shown if tasks exist)
+  const JOB_SECTIONS  = ['main','side'];
+  const OPT_SECTIONS  = ['social','growth'];
+  const ALL_ORDERED   = [...JOB_SECTIONS, ...OPT_SECTIONS];
+
+  // Build a chip HTML for a single task
+  function chipHtml(t){
+    const d = tdDueInfo(t.due);
+    const late = d && d.urg==='overdue';
     return `<div class="td-chip" data-td-toggle="${t.id}">
-      <span class="td-check" style="pointer-events:none"></span>
+      <span class="td-check${t.done?' on':''}" style="pointer-events:none"><i class="fa-solid fa-check"></i></span>
       <span>${esc(t.text)}</span>
-      <span class="badge" style="background:var(--gray-100);color:${s.color};border-color:${s.color}">${esc(s.label)}</span>
-      ${late?`<span class="badge" style="background:var(--error-light);color:var(--error-red);border-color:var(--error-red)">${esc(d.rel)}</span>`:''}
+      ${late?`<span class="badge" style="background:var(--error-light);color:var(--error-red);border-color:var(--error-red)"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(d.rel)}</span>`:''}
     </div>`;
-  }).join('')}</div>`;
+  }
+
+  // Group tasks by section, cap at 3 each
+  let groupsHtml = '';
+  ALL_ORDERED.forEach(secId=>{
+    const secDef   = tdSec(secId);
+    const secTasks = focus.filter(t=>t.section===secId);
+    // optional sections: skip if no tasks
+    if(!secTasks.length) return;
+    const top3   = secTasks.slice(0,3);
+    const extra  = secTasks.length - top3.length;
+    groupsHtml += `
+      <div class="td-today-group" style="flex:1 1 220px;min-width:180px;max-width:340px">
+        <div class="td-today-group-head" style="
+          display:flex;align-items:center;gap:.4rem;
+          font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+          color:${secDef.color};margin-bottom:.4rem;
+          border-bottom:2px solid ${secDef.color};padding-bottom:.25rem">
+          <i class="fa-solid ${secDef.icon}"></i> ${esc(secDef.label)}
+          <span style="margin-left:auto;background:var(--putih-coway);border:1px solid ${secDef.color};
+            padding:0 .4rem;font-size:.68rem;color:${secDef.color}">${secTasks.length}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.35rem">
+          ${top3.map(t=>chipHtml(t)).join('')}
+          ${extra>0?`<div style="font-size:.72rem;color:var(--gray-400);padding:.2rem .4rem">
+            +${extra} more — switch to the ${esc(secDef.label)} tab to see all</div>`:''}
+        </div>
+      </div>`;
+  });
+
+  el.innerHTML = head + `<div class="td-today-groups" style="
+    display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start">${groupsHtml}</div>`;
 }
 
 const isImgUrl = u => /\.(png|jpe?g|gif|webp|svg|bmp)(\?|#|$)/i.test(u||'');
