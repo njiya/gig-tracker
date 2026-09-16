@@ -1087,6 +1087,7 @@ textarea{resize:vertical;min-height:3.5rem}
           <input id="bank-search" placeholder="Search inspo…" type="text" autocomplete="off">
         </div>
       </div>
+      <button class="btn btn-ghost btn-sm" id="refreshThumbsBtn" title="Re-fetch thumbnails for TikTok/Instagram cards that are missing one"><i class="fa-solid fa-rotate"></i> Refresh Thumbs</button>
       <button class="btn btn-primary btn-sm" id="addBankBtn"><i class="fa-solid fa-plus"></i> Add Inspo</button>
     </div>
 
@@ -1163,6 +1164,7 @@ textarea{resize:vertical;min-height:3.5rem}
     </div>
     <div class="modal-body" id="gigModalBody"></div>
     <div class="modal-footer">
+      <button class="btn btn-danger" id="gig-delete" style="margin-right:auto;display:none"><i class="fa-solid fa-trash-can"></i> Delete</button>
       <button class="btn btn-ghost" id="gig-cancel">Cancel</button>
       <button class="btn btn-primary" id="gig-save">Save</button>
     </div>
@@ -1608,11 +1610,12 @@ function renderTable(board){
       <td>${j.payment?esc(j.payment):'<span style="color:var(--border-light)">—</span>'}</td>
       <td>${dlCell}</td>
       <td>${j.url?`<a class="t-link" href="${esc(tidyUrl(j.url))}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="fa-solid fa-up-right-from-square"></i></a>`:'<span style="color:var(--border-light)">—</span>'}</td>
+      <td style="white-space:nowrap"><button class="btn btn-danger btn-sm" data-gig-del="${j.id}" onclick="event.stopPropagation()" title="Delete"><i class="fa-solid fa-trash-can"></i></button></td>
     </tr>`;
   }).join('');
   board.innerHTML = `<div class="table-scroll"><table class="gig-table">
     <thead><tr><th>Platform</th><th>Role</th><th>Status</th><th>Stage</th>
-      <th>Pay</th><th>Method</th><th>Deadline</th><th>Link</th></tr></thead>
+      <th>Pay</th><th>Method</th><th>Deadline</th><th>Link</th><th></th></tr></thead>
     <tbody>${rows}</tbody></table></div>`;
 }
 
@@ -2116,11 +2119,11 @@ async function fetchOembedThumb(url, platform){
       const m = url.match(/(?:v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{11})/);
       if(m) return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
     }
-    if(platform==='tiktok'){
-      const r = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
-      if(r.ok){ const d=await r.json(); return d.thumbnail_url||''; }
+    // TikTok and Instagram: use noembed.com as a CORS-safe oEmbed proxy
+    if(platform==='tiktok' || platform==='instagram'){
+      const r = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+      if(r.ok){ const d=await r.json(); if(d.thumbnail_url) return d.thumbnail_url; }
     }
-    // Instagram oEmbed requires a token — skip silently, show gradient fallback
   }catch(e){ /* network error — use fallback */ }
   return '';
 }
@@ -2149,7 +2152,7 @@ function openBankModal(id){
   document.getElementById('bankModalBody').innerHTML=`
     <div class="form-group"><label><i class="fa-solid fa-link"></i> Video / Post URL</label>
       <input type="url" id="bk-url" value="${esc(it.url)}" placeholder="https://www.tiktok.com/@…">
-      <span class="form-hint">YouTube and TikTok thumbnails are fetched automatically on save. Instagram shows a gradient placeholder (their API requires a login token).</span></div>
+      <span class="form-hint">YouTube, TikTok, and Instagram Reels thumbnails are fetched automatically on save.</span></div>
     <div class="form-group"><label><i class="fa-solid fa-heading"></i> Title <span class="opt">(opt.)</span></label>
       <input type="text" id="bk-title" value="${esc(it.title||'')}" placeholder="e.g. POV: solo date in Jakarta"></div>
     <div class="form-group"><label><i class="fa-solid fa-film"></i> Content Type</label>
@@ -2292,6 +2295,20 @@ document.getElementById('bankModal').addEventListener('click',e=>{if(e.target.id
 
 document.getElementById('addBankBtn').onclick = ()=>openBankModal(null);
 document.getElementById('bank-search').addEventListener('input', renderBank);
+document.getElementById('refreshThumbsBtn').onclick = async ()=>{
+  const btn = document.getElementById('refreshThumbsBtn');
+  const targets = ideaBank.filter(it=>!it.thumbnail && (it.platform==='tiktok'||it.platform==='instagram') && it.url);
+  if(!targets.length){flash('No cards need a thumbnail refresh');return}
+  btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Fetching…';
+  let updated=0;
+  for(const it of targets){
+    const thumb = await fetchOembedThumb(it.url, it.platform);
+    if(thumb){it.thumbnail=thumb;updated++}
+  }
+  btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-rotate"></i> Refresh Thumbs';
+  if(updated){saveCS();renderBank();flash(`Updated ${updated} thumbnail${updated>1?'s':''}`)}
+  else{flash('No thumbnails could be fetched')}
+};
 
 document.getElementById('bank-grid').addEventListener('click',e=>{
   const editBtn = e.target.closest('[data-bank-edit]');
@@ -2526,6 +2543,9 @@ function openGigModal(id){
       <textarea id="f-attach" placeholder="https://drive.google.com/…">${esc((j.attachments||[]).join('\n'))}</textarea></div>
     <div class="form-group"><label><i class="fa-solid fa-note-sticky"></i> Notes <span class="opt">(optional)</span></label>
       <textarea id="f-notes" placeholder="Deadlines, task type, contacts…">${esc(j.notes)}</textarea></div>`;
+  const delBtn = document.getElementById('gig-delete');
+  delBtn.style.display = editing ? '' : 'none';
+  delBtn.onclick = ()=>{if(confirm('Delete this gig?')){jobs=jobs.filter(x=>x.id!==editing.id);saveGigs();renderGigs();showGigModal(false)}};
   showGigModal(true);
   const getPlatform = wireOtherSelect(body,'f-platform','f-platform-other');
   const getJob = wireOtherSelect(body,'f-job','f-job-other');
@@ -2562,6 +2582,8 @@ document.getElementById('viewSwitch').addEventListener('click',e=>{
   renderGigs();
 });
 document.getElementById('board').addEventListener('click',e=>{
+  const delBtn = e.target.closest('[data-gig-del]');
+  if(delBtn){if(confirm('Delete this gig?')){const id=delBtn.dataset.gigDel;jobs=jobs.filter(x=>x.id!==id);saveGigs();renderGigs()}return}
   const row = e.target.closest('[data-open]');
   if(row && !e.target.closest('a')) openGigModal(row.dataset.open);
 });
