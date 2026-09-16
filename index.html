@@ -2191,12 +2191,31 @@ async function fetchOembedThumb(url, platform){
       const m = url.match(/(?:v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{11})/);
       if(m) return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
     }
-    // TikTok and Instagram: use noembed.com as a CORS-safe oEmbed proxy
-    if(platform==='tiktok' || platform==='instagram'){
-      const r = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
-      if(r.ok){ const d=await r.json(); if(d.thumbnail_url) return d.thumbnail_url; }
+    if(platform==='tiktok'){
+      const ttOembed = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
+      // Try corsproxy.io first, then allorigins as fallback
+      for(const proxy of [
+        `https://corsproxy.io/?url=${encodeURIComponent(ttOembed)}`,
+        `https://api.allorigins.win/get?url=${encodeURIComponent(ttOembed)}`
+      ]){
+        try{
+          const r = await fetch(proxy);
+          if(!r.ok) continue;
+          const raw = await r.json();
+          // allorigins wraps response in {contents:…}
+          const d = raw.contents ? JSON.parse(raw.contents) : raw;
+          if(d.thumbnail_url) return d.thumbnail_url;
+        }catch(_){}
+      }
     }
-  }catch(e){ /* network error — use fallback */ }
+    if(platform==='instagram'){
+      // noembed still covers Instagram basic posts
+      try{
+        const r = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+        if(r.ok){ const d=await r.json(); if(d.thumbnail_url) return d.thumbnail_url; }
+      }catch(_){}
+    }
+  }catch(e){}
   return '';
 }
 
