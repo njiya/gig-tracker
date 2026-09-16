@@ -378,20 +378,14 @@ textarea{resize:vertical;min-height:3.5rem}
 .cs-plat-link:hover{transform:translateY(-2px);border-color:var(--primary-accent)}
 /* coloured top strip */
 .plat-top{height:5px;width:100%}
-.plat-yt .plat-top{background:linear-gradient(90deg,#FF0000,#FF6B6B)}
-.plat-ig .plat-top{background:linear-gradient(90deg,#833AB4,#FD1D1D,#FCB045)}
-.plat-tt-fashion .plat-top{background:linear-gradient(90deg,#010101,#69C9D0)}
-.plat-tt-travel .plat-top{background:linear-gradient(90deg,#69C9D0,#EE1D52)}
+.plat-yt .plat-top,.plat-ig .plat-top,.plat-tt-fashion .plat-top,.plat-tt-travel .plat-top{background:var(--primary-accent)}
 /* body */
 .plat-body{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem;
   background:var(--putih-coway)}
 .plat-icon-wrap{width:36px;height:36px;display:flex;align-items:center;
   justify-content:center;font-size:1.3rem;flex:0 0 auto}
-.plat-yt .plat-icon-wrap{color:#FF0000}
-.plat-ig .plat-icon-wrap{background:linear-gradient(135deg,#833AB4,#FD1D1D,#FCB045);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.plat-tt-fashion .plat-icon-wrap{color:#010101}
-.plat-tt-travel .plat-icon-wrap{color:#69C9D0}
+.plat-yt .plat-icon-wrap,.plat-ig .plat-icon-wrap,
+.plat-tt-fashion .plat-icon-wrap,.plat-tt-travel .plat-icon-wrap{color:var(--primary-accent)}
 .plat-text{flex:1;min-width:0}
 .plat-name{font-size:.85rem;font-weight:700;color:var(--slate-900);letter-spacing:-.01em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -908,6 +902,21 @@ textarea{resize:vertical;min-height:3.5rem}
         <i class="fa-solid fa-magnifying-glass"></i>
         <input id="search" placeholder="Search platform, job, status, notes…" type="text" autocomplete="off">
       </div>
+      <select id="filterStatus" style="flex:0 0 auto;width:auto;padding:.625rem .75rem;font-size:.8rem">
+        <option value="">All Statuses</option>
+        <option value="">— none (Available) —</option>
+        <option value="applied">Applied</option>
+        <option value="verified">Verified</option>
+        <option value="assessment">Assessment</option>
+        <option value="accepted">Accepted</option>
+        <option value="declined">Declined</option>
+        <option value="on progress">On Progress</option>
+        <option value="finished">Finished</option>
+        <option value="paid">Paid</option>
+      </select>
+      <select id="filterPlatform" style="flex:0 0 auto;width:auto;padding:.625rem .75rem;font-size:.8rem">
+        <option value="">All Platforms</option>
+      </select>
       <button class="btn btn-outline" id="exportBtn"><i class="fa-solid fa-file-export"></i> Export</button>
       <button class="btn btn-outline" id="importBtn"><i class="fa-solid fa-file-import"></i> Import</button>
       <input type="file" id="importFile" accept="application/json" hidden>
@@ -915,8 +924,8 @@ textarea{resize:vertical;min-height:3.5rem}
     </div>
     <div class="toolbar" style="margin-top:-.5rem">
       <div class="view-switch" id="viewSwitch">
-        <button data-view="kanban" class="on"><i class="fa-solid fa-table-columns"></i> Kanban</button>
-        <button data-view="table"><i class="fa-solid fa-table-list"></i> Table</button>
+        <button data-view="kanban"><i class="fa-solid fa-table-columns"></i> Kanban</button>
+        <button data-view="table" class="on"><i class="fa-solid fa-table-list"></i> Table</button>
         <button data-view="list"><i class="fa-solid fa-bars-staggered"></i> List</button>
         <button data-view="timeline"><i class="fa-solid fa-timeline"></i> Timeline</button>
       </div>
@@ -1320,8 +1329,8 @@ const GIG_SEED = [
     status:'',notes:r[2]?('Onboarding: '+r[2]):'',attachments:[],deadline:dl,added:Date.now()};
 });
 
-let jobs = [], gigQuery = '', openMenu = null;
-let gigView = (()=>{ try{ return localStorage.getItem('sidegig_view')||'kanban' }catch(e){ return 'kanban' } })();
+let jobs = [], gigQuery = '', gigFilterStatus = '', gigFilterPlatform = '', openMenu = null;
+let gigView = (()=>{ try{ return localStorage.getItem('sidegig_view')||'table' }catch(e){ return 'table' } })();
 
 /* ================================================================
    CONTENT STUDIO DATA
@@ -1548,6 +1557,8 @@ function deadlineInfo(iso){
   return{date:d,label:fmtDeadline(iso),rel,urg};
 }
 function gigMatches(j){
+  if(gigFilterStatus && (j.status||'')!==gigFilterStatus) return false;
+  if(gigFilterPlatform && (j.platform||'').toLowerCase()!==gigFilterPlatform.toLowerCase()) return false;
   if(!gigQuery) return true; const q = gigQuery.toLowerCase();
   return[j.platform,j.job,j.status,j.notes,j.pay,j.payment,j.url,(j.attachments||[]).join(' ')]
     .some(v=>(v||'').toLowerCase().includes(q));
@@ -1565,6 +1576,7 @@ function statusBadge(s){
 }
 
 function renderGigs(){
+  refreshPlatformFilter();
   renderDeadlines();
   const c = s => jobs.filter(j=>sectionOf(j)===s).length;
   document.getElementById('tally').innerHTML =
@@ -1619,12 +1631,13 @@ function renderTable(board){
       <td>${j.payment?esc(j.payment):'<span style="color:var(--border-light)">—</span>'}</td>
       <td>${dlCell}</td>
       <td>${j.url?`<a class="t-link" href="${esc(tidyUrl(j.url))}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="fa-solid fa-up-right-from-square"></i></a>`:'<span style="color:var(--border-light)">—</span>'}</td>
+      <td style="font-size:.72rem;color:var(--gray-400);white-space:nowrap">${j.added?new Date(j.added).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'—'}</td>
       <td style="white-space:nowrap"><button class="btn btn-danger btn-sm" data-gig-del="${j.id}" title="Delete"><i class="fa-solid fa-trash-can"></i></button></td>
     </tr>`;
   }).join('');
   board.innerHTML = `<div class="table-scroll"><table class="gig-table">
     <thead><tr><th>Platform</th><th>Role</th><th>Status</th><th>Stage</th>
-      <th>Pay</th><th>Method</th><th>Deadline</th><th>Link</th><th></th></tr></thead>
+      <th>Pay</th><th>Method</th><th>Deadline</th><th>Link</th><th>Added</th><th></th></tr></thead>
     <tbody>${rows}</tbody></table></div>`;
 }
 
@@ -2597,6 +2610,15 @@ document.getElementById('board').addEventListener('click',e=>{
   if(row && !e.target.closest('a')) openGigModal(row.dataset.open);
 });
 document.getElementById('search').addEventListener('input',e=>{gigQuery=e.target.value;renderGigs()});
+document.getElementById('filterStatus').addEventListener('change',e=>{gigFilterStatus=e.target.value;renderGigs()});
+document.getElementById('filterPlatform').addEventListener('change',e=>{gigFilterPlatform=e.target.value;renderGigs()});
+function refreshPlatformFilter(){
+  const sel=document.getElementById('filterPlatform');
+  if(!sel) return;
+  const cur=sel.value;
+  const plats=[...new Set(jobs.map(j=>j.platform||'').filter(Boolean))].sort();
+  sel.innerHTML=`<option value="">All Platforms</option>`+plats.map(p=>`<option value="${esc(p)}"${p===cur?' selected':''}>${esc(p)}</option>`).join('');
+}
 document.getElementById('exportBtn').onclick = ()=>{
   const blob = new Blob([JSON.stringify(jobs,null,2)],{type:'application/json'});
   const a = document.createElement('a');a.href=URL.createObjectURL(blob);
