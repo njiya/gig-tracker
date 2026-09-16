@@ -60,7 +60,7 @@ a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 /* ======== 3. PAGE LAYOUT ======== */
-.page-wrap{max-width:1280px;margin:0 auto;padding:1.25rem 1.25rem 6rem}
+.page-wrap{max-width:1600px;margin:0 auto;padding:1.25rem 1.5rem 6rem}
 
 /* ======== 4. SIDEBAR NAV ======== */
 :root{ --sb-w:236px; --sb-w-collapsed:60px; }
@@ -1044,6 +1044,7 @@ textarea{resize:vertical;min-height:3.5rem}
             <tbody id="ideas-tbody"></tbody>
           </table>
         </div>
+        <div id="ideas-pagination" style="display:flex;align-items:center;gap:.375rem;padding:.5rem .75rem;border-top:var(--border-width) solid var(--border-light);background:var(--gray-100)"></div>
       </div>
 
     </div><!-- /cs-layout -->
@@ -1380,7 +1381,8 @@ const IDEA_SEED = [
   {id:'i30',idea:'cafe I recently went to',form:'carousel',platform:'',posted:false,status:''},
 ];
 
-let projects = [], ideas = [], ideaBank = [], projFilter = 'in-progress', ideaFilter = 'ideas', ideaQuery = '', bankPlatFilter = 'all';
+let projects = [], ideas = [], ideaBank = [], projFilter = 'in-progress', ideaFilter = 'ideas', ideaQuery = '', bankPlatFilter = 'all', ideaPage = 1;
+const IDEAS_PER_PAGE = 5;
 
 /* ================================================================
    HELPERS
@@ -1906,13 +1908,20 @@ function renderIdeas(){
   else if(ideaFilter === 'posted') list = list.filter(i=>i.posted||(i.status||'').toLowerCase()==='posted');
   if(q) list = list.filter(i=>[i.idea,i.platform,i.form,i.status].some(v=>(v||'').toLowerCase().includes(q)));
 
-  document.getElementById('ideas-count').textContent = list.length;
+  const total = list.length;
+  const totalPages = Math.max(1, Math.ceil(total / IDEAS_PER_PAGE));
+  if(ideaPage > totalPages) ideaPage = totalPages;
+  document.getElementById('ideas-count').textContent = total;
+
   const tbody = document.getElementById('ideas-tbody');
-  if(!list.length){
+  if(!total){
     tbody.innerHTML=`<tr><td colspan="5"><div class="cs-empty"><i class="fa-solid fa-lightbulb"></i><span>No ideas found.</span></div></td></tr>`;
+    document.getElementById('ideas-pagination').innerHTML='';
     return;
   }
-  tbody.innerHTML = list.map(i=>`
+
+  const page = list.slice((ideaPage-1)*IDEAS_PER_PAGE, ideaPage*IDEAS_PER_PAGE);
+  tbody.innerHTML = page.map(i=>`
     <tr data-idea-id="${esc(i.id)}">
       <td class="td-idea">${esc(i.idea)}</td>
       <td class="td-platform"><div>${platChips(i.platform)}</div></td>
@@ -1923,6 +1932,18 @@ function renderIdeas(){
         <button class="btn btn-danger btn-sm" data-idea-del="${esc(i.id)}" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
       </td>
     </tr>`).join('');
+
+  // Pagination bar
+  const pg = document.getElementById('ideas-pagination');
+  if(totalPages <= 1){pg.innerHTML='';return}
+  const from = (ideaPage-1)*IDEAS_PER_PAGE+1, to = Math.min(ideaPage*IDEAS_PER_PAGE, total);
+  const btn = (label, page, disabled, active)=>
+    `<button onclick="ideaPage=${page};renderIdeas()" style="padding:.3rem .6rem;font-size:.72rem;font-weight:600;border:var(--border-width) solid ${active?'var(--primary-accent)':'var(--border-light)'};background:${active?'var(--primary-accent)':'var(--putih-coway)'};color:${active?'#fff':'var(--slate-700)'};cursor:${disabled?'default':'pointer'};opacity:${disabled?.4:1}"${disabled?' disabled':''}>${label}</button>`;
+  let html = btn('&laquo;',1,ideaPage===1,false)+btn('&lsaquo;',ideaPage-1,ideaPage===1,false);
+  for(let p=1;p<=totalPages;p++) html+=btn(p,p,false,p===ideaPage);
+  html+=btn('&rsaquo;',ideaPage+1,ideaPage===totalPages,false)+btn('&raquo;',totalPages,ideaPage===totalPages,false);
+  html+=`<span style="margin-left:auto;font-size:.72rem;color:var(--slate-700)">${from}–${to} of ${total}</span>`;
+  pg.innerHTML=html;
 }
 
 function setProjFilter(f, el){
@@ -1932,7 +1953,7 @@ function setProjFilter(f, el){
   renderProjects();
 }
 function setIdeaFilter(f, el){
-  ideaFilter = f;
+  ideaFilter = f; ideaPage = 1;
   document.querySelectorAll('[data-idea-filter]').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   renderIdeas();
@@ -2473,7 +2494,7 @@ document.getElementById('ideaModal').addEventListener('click',e=>{if(e.target.id
 ================================================================ */
 document.getElementById('addProjBtn').onclick = ()=>openProjModal(null);
 document.getElementById('addIdeaBtn').onclick = ()=>openIdeaModal(null);
-document.getElementById('idea-search').addEventListener('input',e=>{ideaQuery=e.target.value;renderIdeas()});
+document.getElementById('idea-search').addEventListener('input',e=>{ideaQuery=e.target.value;ideaPage=1;renderIdeas()});
 
 document.getElementById('proj-cards').addEventListener('click',e=>{
   const km = e.target.closest('[data-proj-menu]');
