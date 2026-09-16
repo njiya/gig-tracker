@@ -1087,7 +1087,7 @@ textarea{resize:vertical;min-height:3.5rem}
         </div>
       </div>
       <button class="btn btn-ghost btn-sm" id="importSheetBtn"><i class="fa-solid fa-file-import"></i> Import Sheet</button>
-      <button class="btn btn-ghost btn-sm" id="refreshThumbsBtn" title="Re-fetch thumbnails for TikTok/Instagram cards that are missing one"><i class="fa-solid fa-rotate"></i> Refresh Thumbs</button>
+      <button class="btn btn-ghost btn-sm" id="refreshThumbsBtn" title="Re-fetch YouTube thumbnails for cards missing one"><i class="fa-solid fa-rotate"></i> Refresh Thumbs</button>
       <button class="btn btn-primary btn-sm" id="addBankBtn"><i class="fa-solid fa-plus"></i> Add Inspo</button>
     </div>
 
@@ -2180,10 +2180,9 @@ function setBankFilter(plat, el){
 }
 
 /* Fetch thumbnail via oEmbed APIs.
-   - YouTube: direct img.youtube.com (no API key needed)
-   - TikTok: https://www.tiktok.com/oembed?url=…  (returns thumbnail_url)
-   - Instagram: https://graph.facebook.com/v18.0/instagram_oembed?url=…
-     IG oEmbed now requires an access token — so we fall back gracefully.
+   - YouTube: direct img.youtube.com CDN (no CORS issue, no API key needed)
+   - TikTok/Instagram: browser-side CORS blocks all public oEmbed APIs.
+     Users should paste a thumbnail URL manually in the form.
 */
 async function fetchOembedThumb(url, platform){
   try{
@@ -2191,30 +2190,9 @@ async function fetchOembedThumb(url, platform){
       const m = url.match(/(?:v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{11})/);
       if(m) return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
     }
-    if(platform==='tiktok'){
-      const ttOembed = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
-      // Try corsproxy.io first, then allorigins as fallback
-      for(const proxy of [
-        `https://corsproxy.io/?url=${encodeURIComponent(ttOembed)}`,
-        `https://api.allorigins.win/get?url=${encodeURIComponent(ttOembed)}`
-      ]){
-        try{
-          const r = await fetch(proxy);
-          if(!r.ok) continue;
-          const raw = await r.json();
-          // allorigins wraps response in {contents:…}
-          const d = raw.contents ? JSON.parse(raw.contents) : raw;
-          if(d.thumbnail_url) return d.thumbnail_url;
-        }catch(_){}
-      }
-    }
-    if(platform==='instagram'){
-      // noembed still covers Instagram basic posts
-      try{
-        const r = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
-        if(r.ok){ const d=await r.json(); if(d.thumbnail_url) return d.thumbnail_url; }
-      }catch(_){}
-    }
+    // TikTok and Instagram oEmbed APIs are CORS-blocked from the browser.
+    // All public CORS proxy services are either down or require paid API keys.
+    // Users can add a thumbnail manually via the Thumbnail field in the form.
   }catch(e){}
   return '';
 }
@@ -2243,7 +2221,7 @@ function openBankModal(id){
   document.getElementById('bankModalBody').innerHTML=`
     <div class="form-group"><label><i class="fa-solid fa-link"></i> Video / Post URL</label>
       <input type="url" id="bk-url" value="${esc(it.url)}" placeholder="https://www.tiktok.com/@…">
-      <span class="form-hint">YouTube, TikTok, and Instagram Reels thumbnails are fetched automatically on save.</span></div>
+      <span class="form-hint">YouTube thumbnails are fetched automatically. For TikTok &amp; Instagram, paste a thumbnail URL in the field below.</span></div>
     <div class="form-group"><label><i class="fa-solid fa-heading"></i> Title <span class="opt">(opt.)</span></label>
       <input type="text" id="bk-title" value="${esc(it.title||'')}" placeholder="e.g. POV: solo date in Jakarta"></div>
     <div class="form-group"><label><i class="fa-solid fa-film"></i> Content Type</label>
@@ -2254,8 +2232,8 @@ function openBankModal(id){
       <div class="form-group"><label><i class="fa-solid fa-tag"></i> Category <span class="opt">(opt.)</span></label>
         <select id="bk-cat">${catOpts}</select></div>
     </div>
-    <div class="form-group" id="bk-thumb-upload-wrap" style="display:${(it.platform==='tiktok'&&it.contentType&&it.contentType!=='video')?'block':'none'}">
-      <label><i class="fa-solid fa-image"></i> Thumbnail <span class="opt">(for carousel/story)</span></label>
+    <div class="form-group" id="bk-thumb-upload-wrap" style="display:${(it.platform==='tiktok'||it.platform==='instagram')?'block':'none'}">
+      <label><i class="fa-solid fa-image"></i> Thumbnail <span class="opt">(opt.)</span></label>
       <input type="url" id="bk-thumb-url" value="${esc(!it.thumbnail||it.thumbnail.startsWith('data:')?'':it.thumbnail)}" placeholder="https://… paste image URL">
       <div style="display:flex;align-items:center;gap:.5rem;margin:.35rem 0;font-size:.72rem;color:var(--gray-400)">
         <span style="flex:1;height:1px;background:var(--border-light)"></span> or <span style="flex:1;height:1px;background:var(--border-light)"></span>
@@ -2286,11 +2264,10 @@ function openBankModal(id){
   showBankModal(true);
   document.getElementById('bk-url').focus();
 
-  // Toggle TikTok thumbnail upload visibility based on platform + content type
+  // Show thumbnail field for TikTok and Instagram (auto-fetch not available for these)
   function updateThumbUploadVisibility(){
     const plat = document.getElementById('bk-platform').value;
-    const ctype = document.querySelector('input[name="bk-ctype"]:checked')?.value||'';
-    const show = plat==='tiktok' && ctype && ctype!=='video';
+    const show = plat==='tiktok' || plat==='instagram';
     document.getElementById('bk-thumb-upload-wrap').style.display = show?'block':'none';
   }
   document.getElementById('bk-platform').addEventListener('change', updateThumbUploadVisibility);
@@ -2388,8 +2365,8 @@ document.getElementById('addBankBtn').onclick = ()=>openBankModal(null);
 document.getElementById('bank-search').addEventListener('input', renderBank);
 document.getElementById('refreshThumbsBtn').onclick = async ()=>{
   const btn = document.getElementById('refreshThumbsBtn');
-  const targets = ideaBank.filter(it=>!it.thumbnail && it.url && it.platform);
-  if(!targets.length){flash('No cards need a thumbnail refresh');return}
+  const targets = ideaBank.filter(it=>!it.thumbnail && it.url && it.platform==='youtube');
+  if(!targets.length){flash('No YouTube cards are missing a thumbnail');return}
   btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Fetching…';
   let updated=0;
   for(const it of targets){
