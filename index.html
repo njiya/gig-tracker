@@ -1619,7 +1619,7 @@ function renderTable(board){
       <td>${j.payment?esc(j.payment):'<span style="color:var(--border-light)">—</span>'}</td>
       <td>${dlCell}</td>
       <td>${j.url?`<a class="t-link" href="${esc(tidyUrl(j.url))}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="fa-solid fa-up-right-from-square"></i></a>`:'<span style="color:var(--border-light)">—</span>'}</td>
-      <td style="white-space:nowrap"><button class="btn btn-danger btn-sm" data-gig-del="${j.id}" onclick="event.stopPropagation()" title="Delete"><i class="fa-solid fa-trash-can"></i></button></td>
+      <td style="white-space:nowrap"><button class="btn btn-danger btn-sm" data-gig-del="${j.id}" title="Delete"><i class="fa-solid fa-trash-can"></i></button></td>
     </tr>`;
   }).join('');
   board.innerHTML = `<div class="table-scroll"><table class="gig-table">
