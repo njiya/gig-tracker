@@ -2369,7 +2369,7 @@ document.getElementById('addBankBtn').onclick = ()=>openBankModal(null);
 document.getElementById('bank-search').addEventListener('input', renderBank);
 document.getElementById('refreshThumbsBtn').onclick = async ()=>{
   const btn = document.getElementById('refreshThumbsBtn');
-  const targets = ideaBank.filter(it=>!it.thumbnail && (it.platform==='tiktok'||it.platform==='instagram') && it.url);
+  const targets = ideaBank.filter(it=>!it.thumbnail && it.url && it.platform);
   if(!targets.length){flash('No cards need a thumbnail refresh');return}
   btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Fetching…';
   let updated=0;
@@ -2468,7 +2468,19 @@ document.getElementById('import-sheet-go').onclick = async ()=>{
     }
     saveCS(); renderBank();
     document.getElementById('importSheetModal').classList.remove('active');
-    flash(`Imported ${added} item${added!==1?'s':''}${skipped?` (${skipped} skipped)`:''}. Use Refresh Thumbs to load thumbnails.`);
+    status.textContent='';
+    goBtn.disabled=false; goBtn.innerHTML='<i class="fa-solid fa-file-import"></i> Import';
+    flash(`Imported ${added} item${added!==1?'s':''}${skipped?` (${skipped} skipped)`:''} — fetching thumbnails…`);
+    // Auto-fetch thumbnails for newly imported items
+    const newItems = ideaBank.filter(it=>!it.thumbnail && it.url && it.platform);
+    let thumbsUpdated=0;
+    for(const it of newItems){
+      const thumb = await fetchOembedThumb(it.url, it.platform);
+      if(thumb){it.thumbnail=thumb;thumbsUpdated++}
+    }
+    if(thumbsUpdated){saveCS();renderBank();flash(`${added} imported, ${thumbsUpdated} thumbnail${thumbsUpdated!==1?'s':''} loaded`)}
+    else{flash(`${added} imported${skipped?` (${skipped} skipped)`:''}`)}
+    return;
   }catch(e){
     status.style.color='var(--error-red)';
     status.textContent=`Failed: ${e.message}. Make sure the sheet is shared publicly.`;
