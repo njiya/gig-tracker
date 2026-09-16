@@ -141,15 +141,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 }
 
 /* Header */
-.page-header{position:relative;overflow:hidden;
-  background:linear-gradient(135deg,#0d4580 0%,#04A5E6 100%);
-  padding:1.25rem 1.5rem 2.5rem;margin:0 0 1.25rem;
-  border:var(--border-width) solid var(--border-light)}
-.page-header h1{font-size:1.35rem;font-weight:700;color:#fff;
-  letter-spacing:-.02em;line-height:1.1;display:flex;align-items:center;gap:.5rem}
-.page-header h1 i{font-size:1.4rem;opacity:.9}
-.page-header p{color:rgba(255,255,255,.8);font-size:.82rem;margin:.25rem 0 0}
-.page-header svg.wave{position:absolute;bottom:0;left:0;width:100%;height:40px}
+.page-header{background:var(--putih-coway);padding:.875rem 1.25rem;
+  margin:0 0 1.25rem;border:var(--border-width) solid var(--border-light);
+  border-left:3px solid var(--primary-accent);display:flex;align-items:center;gap:.75rem}
+.page-header h1{font-size:1rem;font-weight:700;color:var(--slate-900);
+  letter-spacing:-.01em;line-height:1.2;display:flex;align-items:center;gap:.5rem;margin:0}
+.page-header h1 i{font-size:.95rem;color:var(--primary-accent)}
+.page-header p{color:var(--slate-700);font-size:.78rem;margin:0;flex:1}
+.page-header svg.wave{display:none}
 
 /* Tally stats */
 /* Toolbar */
@@ -878,6 +877,8 @@ textarea{resize:vertical;min-height:3.5rem}
     </nav>
 
     <div class="sb-extra">
+      <button id="syncCodeBtn">
+        <i class="fa-solid fa-link"></i> <span id="syncCodeLabel">Sync Code</span></button>
       <button id="importOldBtn" style="display:none">
         <i class="fa-solid fa-box-archive"></i> Import old data</button>
     </div>
@@ -896,13 +897,9 @@ textarea{resize:vertical;min-height:3.5rem}
 
   <!-- ===== SIDE GIGS PANEL ===== -->
   <div id="gigs-panel" class="page-wrap" style="display:none">
-    <div class="page-header" style="background:linear-gradient(135deg,#064E3B 0%,#12B76A 100%)">
+    <div class="page-header">
       <h1><i class="fa-solid fa-satellite-dish"></i> Side Gig Tracker</h1>
       <p>Track every side gig from discovery to payday — cards auto-sort by status across four columns.</p>
-      <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
-        <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
-        <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
-      </svg>
     </div>
     <div class="pg-stats c4" id="tally"></div>
     <div class="deadlines-strip" id="deadlines"></div>
@@ -931,13 +928,9 @@ textarea{resize:vertical;min-height:3.5rem}
   <div id="cs-panel" class="page-wrap" style="display:none">
 
     <!-- Studio header -->
-    <div class="page-header" style="background:linear-gradient(135deg,#1a0533 0%,#7A5AF8 100%)">
+    <div class="page-header">
       <h1><i class="fa-solid fa-clapperboard"></i> Content Studio</h1>
       <p>Manage projects, track ideas, and link to your platforms — all in one place.</p>
-      <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
-        <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
-        <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
-      </svg>
     </div>
 
     <!-- Platform quick-links -->
@@ -1049,13 +1042,9 @@ textarea{resize:vertical;min-height:3.5rem}
 
   <!-- ===== IDEA BANK PANEL ===== -->
   <div id="bank-panel" class="page-wrap" style="display:none">
-    <div class="page-header" style="background:linear-gradient(135deg,#7A3E00 0%,#F79009 100%)">
+    <div class="page-header">
       <h1><i class="fa-solid fa-bookmark"></i> Idea Bank</h1>
       <p>Save inspiration from TikTok, Instagram, and YouTube — video previews, categories, and quick links.</p>
-      <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
-        <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
-        <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
-      </svg>
     </div>
 
     <div class="pg-stats c4" id="bank-stats"></div>
@@ -1099,10 +1088,6 @@ textarea{resize:vertical;min-height:3.5rem}
     <div class="page-header">
       <h1><i class="fa-solid fa-list-check"></i> To-Do</h1>
       <p>Everything on your plate, split across the four areas of your life.</p>
-      <svg class="wave" viewBox="0 0 800 50" preserveAspectRatio="none">
-        <path d="M0 20 Q100 0 200 20 T400 20 T600 20 T800 20 L800 50 L0 50Z" fill="rgba(255,255,255,.12)"/>
-        <path d="M0 30 Q150 10 300 30 T600 30 T800 25 L800 50 L0 50Z" fill="rgba(255,255,255,.07)"/>
-      </svg>
     </div>
 
     <div class="td-today" id="td-today"></div>
@@ -1167,6 +1152,30 @@ textarea{resize:vertical;min-height:3.5rem}
       <button class="btn btn-danger" id="gig-delete" style="margin-right:auto;display:none"><i class="fa-solid fa-trash-can"></i> Delete</button>
       <button class="btn btn-ghost" id="gig-cancel">Cancel</button>
       <button class="btn btn-primary" id="gig-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sync Code Modal -->
+<div class="modal-overlay" id="syncModal">
+  <div class="modal-container" style="max-width:400px">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-link"></i> Shared Sync Code</h3>
+      <button id="syncModalClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.82rem;color:var(--slate-700);line-height:1.6">
+        Set a code on every Google account you use. All accounts that share the same code will read and write the same data.</p>
+      <div class="form-group" style="margin-top:.5rem">
+        <label><i class="fa-solid fa-key"></i> Sync Code</label>
+        <input type="text" id="sync-code-input" placeholder="e.g. myworkspace2025" autocomplete="off" spellcheck="false">
+        <span class="form-hint">Choose any word or phrase — treat it like a password. Leave blank to use your Google account data only.</span>
+      </div>
+      <div id="sync-current" style="font-size:.78rem;color:var(--slate-700);margin-top:.25rem"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="sync-cancel">Cancel</button>
+      <button class="btn btn-primary" id="sync-save"><i class="fa-solid fa-floppy-disk"></i> Apply</button>
     </div>
   </div>
 </div>
@@ -2630,6 +2639,36 @@ document.getElementById('lockBtn').onclick = async ()=>{
   showApp(false);
 };
 
+/* ---- Sync Code Modal ---- */
+let _pendingSession = null;
+document.getElementById('syncCodeBtn').onclick = ()=>{
+  const cur = (() => { try{ return localStorage.getItem(SYNC_CODE_KEY)||'' }catch(e){ return '' } })();
+  const inp = document.getElementById('sync-code-input');
+  inp.value = cur;
+  const cur2 = document.getElementById('sync-current');
+  cur2.textContent = cur ? `Currently using code: "${cur}"` : 'Currently using your Google account (no shared code set).';
+  document.getElementById('syncModal').classList.add('active');
+  inp.focus();
+};
+document.getElementById('syncModalClose').onclick = ()=>document.getElementById('syncModal').classList.remove('active');
+document.getElementById('sync-cancel').onclick   = ()=>document.getElementById('syncModal').classList.remove('active');
+document.getElementById('syncModal').addEventListener('click',e=>{if(e.target.id==='syncModal')document.getElementById('syncModal').classList.remove('active')});
+document.getElementById('sync-save').onclick = async ()=>{
+  const code = document.getElementById('sync-code-input').value.trim();
+  try{ if(code) localStorage.setItem(SYNC_CODE_KEY, code); else localStorage.removeItem(SYNC_CODE_KEY); }catch(e){}
+  document.getElementById('syncModal').classList.remove('active');
+  // Re-derive passHash and reload all data
+  if(passHash !== null){
+    const sess = await sb?.auth?.getSession?.();
+    const uid = sess?.data?.session?.user?.id || passHash;
+    passHash = code ? await sha256(code) : uid;
+    await loadGigs(); await loadCS(); await loadTodo();
+    renderGigs(); renderProjects(); renderIdeas(); renderBank(); renderTodo();
+    updateSyncLabel();
+    flash(code ? `Syncing as "${code}"` : 'Back to personal account data');
+  }
+};
+
 /* ================================================================
    AUTH + BOOT
 ================================================================ */
@@ -3122,9 +3161,17 @@ async function signInGoogle(){
   if(error) gErr(error.message);
 }
 
+const SYNC_CODE_KEY = 'sidegig_sync_code';
+function updateSyncLabel(){
+  const code = (() => { try{ return localStorage.getItem(SYNC_CODE_KEY)||'' }catch(e){ return '' } })();
+  const lbl = document.getElementById('syncCodeLabel');
+  if(lbl) lbl.textContent = code ? `Sync: ${code}` : 'Sync Code';
+}
+
 /* After sign-in the Supabase user id becomes the sync key. */
 async function enterApp(session){
-  passHash = session.user.id;
+  const storedCode = (() => { try{ return localStorage.getItem(SYNC_CODE_KEY)||'' }catch(e){ return '' } })();
+  passHash = storedCode ? await sha256(storedCode) : session.user.id;
   const u = session.user || {};
   const meta = u.user_metadata || {};
   const name = meta.full_name || meta.name || (u.email||'').split('@')[0] || 'Signed in';
@@ -3147,6 +3194,7 @@ async function enterApp(session){
   await loadTodo();
   showApp(true);
   renderGigs();
+  updateSyncLabel();
   let start = 'todo';
   try{ start = localStorage.getItem('sidegig_tab') || 'todo' }catch(e){}
   switchTab(start);
