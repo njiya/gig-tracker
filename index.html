@@ -1086,6 +1086,7 @@ textarea{resize:vertical;min-height:3.5rem}
           <input id="bank-search" placeholder="Search inspo…" type="text" autocomplete="off">
         </div>
       </div>
+      <button class="btn btn-ghost btn-sm" id="importSheetBtn"><i class="fa-solid fa-file-import"></i> Import Sheet</button>
       <button class="btn btn-ghost btn-sm" id="refreshThumbsBtn" title="Re-fetch thumbnails for TikTok/Instagram cards that are missing one"><i class="fa-solid fa-rotate"></i> Refresh Thumbs</button>
       <button class="btn btn-primary btn-sm" id="addBankBtn"><i class="fa-solid fa-plus"></i> Add Inspo</button>
     </div>
@@ -1186,6 +1187,34 @@ textarea{resize:vertical;min-height:3.5rem}
     <div class="modal-footer">
       <button class="btn btn-ghost" id="sync-cancel">Cancel</button>
       <button class="btn btn-primary" id="sync-save"><i class="fa-solid fa-floppy-disk"></i> Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Sheet Modal -->
+<div class="modal-overlay" id="importSheetModal">
+  <div class="modal-container" style="max-width:480px">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-file-import"></i> Import from Google Sheet</h3>
+      <button id="importSheetClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.82rem;color:var(--slate-700);line-height:1.6">Paste your Google Sheet URL. The sheet must be shared publicly ("Anyone with the link can view") and have columns: <strong>No, Creator, URL, Platform</strong>.</p>
+      <div class="form-group" style="margin-top:.5rem">
+        <label><i class="fa-brands fa-google"></i> Google Sheet URL</label>
+        <input type="url" id="import-sheet-url" placeholder="https://docs.google.com/spreadsheets/d/…" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-weight:500;text-transform:none;letter-spacing:0">
+          <input type="checkbox" id="import-skip-dupes" checked style="width:auto;padding:0">
+          Skip rows whose URL already exists in the bank
+        </label>
+      </div>
+      <div id="import-sheet-status" style="font-size:.78rem;min-height:1.2rem;color:var(--slate-700)"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="import-sheet-cancel">Cancel</button>
+      <button class="btn btn-primary" id="import-sheet-go"><i class="fa-solid fa-file-import"></i> Import</button>
     </div>
   </div>
 </div>
@@ -1382,7 +1411,7 @@ const IDEA_SEED = [
 ];
 
 let projects = [], ideas = [], ideaBank = [], projFilter = 'in-progress', ideaFilter = 'ideas', ideaQuery = '', bankPlatFilter = 'all', ideaPage = 1;
-const IDEAS_PER_PAGE = 5;
+const IDEAS_PER_PAGE = 8;
 
 /* ================================================================
    HELPERS
@@ -2351,6 +2380,100 @@ document.getElementById('refreshThumbsBtn').onclick = async ()=>{
   btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-rotate"></i> Refresh Thumbs';
   if(updated){saveCS();renderBank();flash(`Updated ${updated} thumbnail${updated>1?'s':''}`)}
   else{flash('No thumbnails could be fetched')}
+};
+
+/* ---- Import from Google Sheet ---- */
+function sheetCsvUrl(raw){
+  // Already a CSV export or published URL — use as-is
+  if(/output=csv/.test(raw)||/export\?format=csv/.test(raw)) return raw;
+  // Standard edit/view URL: extract sheet ID (and optional gid) and convert to export
+  const m = raw.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if(!m) return null;
+  const gidM = raw.match(/[#&?]gid=(\d+)/);
+  let url = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`;
+  if(gidM) url += `&gid=${gidM[1]}`;
+  return url;
+}
+function parseSheetCsv(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length < 2) return [];
+  // Detect header row: No, Creator, URL, Platform (case-insensitive)
+  const header = lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/^"|"$/g,''));
+  const idx = {
+    url: header.findIndex(h=>h==='url'),
+    creator: header.findIndex(h=>h==='creator'||h==='name'),
+    platform: header.findIndex(h=>h==='platform'),
+  };
+  if(idx.url===-1) return null; // can't proceed without URL column
+  return lines.slice(1).map(line=>{
+    // Simple CSV split respecting quoted fields
+    const cols = [];
+    let cur='', inQ=false;
+    for(const ch of line+','){
+      if(ch==='"'){ inQ=!inQ }
+      else if(ch===',' && !inQ){ cols.push(cur.trim()); cur='' }
+      else cur+=ch;
+    }
+    return {
+      url: (cols[idx.url]||'').trim(),
+      creator: idx.creator>=0 ? (cols[idx.creator]||'').trim() : '',
+      platform: idx.platform>=0 ? (cols[idx.platform]||'').trim().toLowerCase() : '',
+    };
+  }).filter(r=>r.url);
+}
+
+document.getElementById('importSheetBtn').onclick = ()=>{
+  document.getElementById('import-sheet-url').value='';
+  document.getElementById('import-sheet-status').textContent='';
+  document.getElementById('importSheetModal').classList.add('active');
+  document.getElementById('import-sheet-url').focus();
+};
+document.getElementById('importSheetClose').onclick = ()=>document.getElementById('importSheetModal').classList.remove('active');
+document.getElementById('import-sheet-cancel').onclick = ()=>document.getElementById('importSheetModal').classList.remove('active');
+document.getElementById('importSheetModal').addEventListener('click',e=>{if(e.target.id==='importSheetModal')document.getElementById('importSheetModal').classList.remove('active')});
+
+document.getElementById('import-sheet-go').onclick = async ()=>{
+  const raw = document.getElementById('import-sheet-url').value.trim();
+  const skipDupes = document.getElementById('import-skip-dupes').checked;
+  const status = document.getElementById('import-sheet-status');
+  const goBtn = document.getElementById('import-sheet-go');
+  if(!raw){ status.textContent='Please paste a Google Sheet URL.'; return; }
+  const csvUrl = sheetCsvUrl(raw);
+  if(!csvUrl){ status.style.color='var(--error-red)'; status.textContent='Could not parse a Google Sheets URL from that input.'; return; }
+  goBtn.disabled=true; goBtn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Importing…';
+  status.style.color='var(--slate-700)'; status.textContent='Fetching sheet…';
+  try{
+    const res = await fetch(csvUrl);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = parseSheetCsv(text);
+    if(rows===null){ status.style.color='var(--error-red)'; status.textContent='Could not find a "URL" column. Check the sheet has headers: No, Creator, URL, Platform.'; goBtn.disabled=false;goBtn.innerHTML='<i class="fa-solid fa-file-import"></i> Import';return; }
+    if(!rows.length){ status.textContent='No data rows found.'; goBtn.disabled=false;goBtn.innerHTML='<i class="fa-solid fa-file-import"></i> Import';return; }
+    const existing = new Set(ideaBank.map(b=>b.url));
+    let added=0, skipped=0;
+    for(const r of rows){
+      if(skipDupes && existing.has(r.url)){skipped++;continue}
+      // Detect platform from URL if column is empty
+      let plat = r.platform;
+      if(!plat){
+        if(/tiktok\.com/.test(r.url)) plat='tiktok';
+        else if(/instagram\.com/.test(r.url)) plat='instagram';
+        else if(/youtube\.com|youtu\.be/.test(r.url)) plat='youtube';
+      }
+      ideaBank.push({id:'b_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+        url:r.url, title:r.creator, platform:plat,
+        category:'', note:'', contentType:'', postStatus:'', thumbnail:''});
+      existing.add(r.url);
+      added++;
+    }
+    saveCS(); renderBank();
+    document.getElementById('importSheetModal').classList.remove('active');
+    flash(`Imported ${added} item${added!==1?'s':''}${skipped?` (${skipped} skipped)`:''}. Use Refresh Thumbs to load thumbnails.`);
+  }catch(e){
+    status.style.color='var(--error-red)';
+    status.textContent=`Failed: ${e.message}. Make sure the sheet is shared publicly.`;
+  }
+  goBtn.disabled=false; goBtn.innerHTML='<i class="fa-solid fa-file-import"></i> Import';
 };
 
 document.getElementById('bank-grid').addEventListener('click',e=>{
